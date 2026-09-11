@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "tracker",
+  "name": "Project Tracker",
+  "enabled": false,
+  "precedence": "after-rules",
+  "permissionOrigins": [
+    "https://api.tracker.example/*"
+  ],
+  "credentials": [
+    {
+      "id": "token",
+      "label": "Access token",
+      "type": "header",
+      "headerName": "Tracker-Token"
+    }
+  ],
+  "routes": [
+    {
+      "id": "item",
+      "pagePattern": "https://tracker.example/items/{itemId}",
+      "steps": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.tracker.example/items/{itemId}"
+          },
+          "extract": {
+            "workspaceId": [
+              "workspace.id"
+            ],
+            "workspaceName": [
+              "workspace.name"
+            ],
+            "itemName": [
+              "name",
+              "title"
+            ]
+          }
+        }
+      ],
+      "placement": {
+        "workspaceId": "{workspaceId}",
+        "workspaceName": "{workspaceName}",
+        "workspaceType": "workspace",
+        "itemId": "{itemId}",
+        "itemName": "{itemName}"
+      }
+    }
+  ]
+}

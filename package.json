@@ -1,0 +1,11 @@
+{
+  "name": "tab-bundlr",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check core.js && node --check sources.js && node --check settings.js && node --check backup.js && node --check background.js && node --check options.js && node --check popup.js && node --check review.js",
+    "test": "npm run check && node --test",
+    "package": "node scripts/package-extension.mjs"
+  }
+}

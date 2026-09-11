@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tab Bundlr settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="settings-shell">
+      <p class="eyebrow">Tab Bundlr</p>
+      <h1>Build predictable browser workspaces.</h1>
+      <p class="lede">Create transparent URL rules, organize on demand, and choose exactly which automatic behaviors to enable. Accounts and external services are optional.</p>
+
+      <form id="settings-form" class="card">
+        <label class="toggle-row" for="enabled">
+          <span>
+            <strong>Automatic Tab Bundling</strong>
+            <small>Move recognized tabs as they open or navigate. Leave this off to use Fix and Organize on demand.</small>
+          </span>
+          <input id="enabled" type="checkbox">
+        </label>
+
+        <label class="toggle-row" for="opener-inheritance">
+          <span>
+            <strong>Inherit the opener workspace</strong>
+            <small>Place a new web tab with its known opener when no more specific rule wins.</small>
+          </span>
+          <input id="opener-inheritance" type="checkbox">
+        </label>
+
+        <div class="previous-tab-mode-setting">
+          <label for="home-base-duplicate-action">Home-base duplicates</label>
+          <select id="home-base-duplicate-action">
+            <option value="review">Review exact duplicates</option>
+            <option value="remove-exact-inactive">Remove exact inactive duplicates automatically</option>
+          </select>
+          <p class="field-help">Automatic removal never closes an active or pinned tab. Review is the default for new installations.</p>
+        </div>
+
+        <label class="toggle-row" for="activate-opened-tabs">
+          <span>
+            <strong>Activate tabs opened from links</strong>
+            <small>Focus a new tab when Chrome provides a direct opener relationship.</small>
+          </span>
+          <input id="activate-opened-tabs" type="checkbox">
+        </label>
+
+        <div class="shortcut-setting">
+          <span class="shortcut-setting-copy">
+            <strong>Temporary activation override</strong>
+            <small>Invert the setting above for 10 seconds. The toolbar icon shows the countdown, and pressing it again restarts the timer.</small>
+          </span>
+          <output id="temporary-activation-shortcut" class="shortcut-value" aria-label="Current temporary activation shortcut">Loading…</output>
+          <button id="change-temporary-activation-shortcut" class="secondary" type="button">Change shortcut</button>
+        </div>
+        <p id="temporary-activation-shortcut-status" class="status shortcut-status" role="status" aria-live="polite"></p>
+
+        <div class="shortcut-setting">
+          <span class="shortcut-setting-copy">
+            <strong>Previous tab</strong>
+            <small>Return to a recently active tab in the current Chrome window.</small>
+          </span>
+          <output id="previous-tab-shortcut" class="shortcut-value" aria-label="Current previous tab shortcut">Loading…</output>
+          <button id="change-previous-tab-shortcut" class="secondary" type="button">Change shortcut</button>
+        </div>
+        <p id="previous-tab-shortcut-status" class="status shortcut-status" role="status" aria-live="polite"></p>
+
+        <div class="previous-tab-mode-setting">
+          <label for="previous-tab-mode">Repeated shortcut presses</label>
+          <select id="previous-tab-mode">
+            <option value="toggle">Toggle between the last two tabs</option>
+            <option value="history">Walk backward through tab history</option>
+          </select>
+          <p class="field-help">Toggle keeps switching between two tabs. Walk backward continues to progressively older tabs until you select a tab normally.</p>
+        </div>
+
+        <label class="toggle-row" for="auto-organize-groups">
+          <span>
+            <strong>Keep managed groups ordered</strong>
+            <small>Keep managed groups in the order below. Pinned tabs and manual groups stay untouched.</small>
+          </span>
+          <input id="auto-organize-groups" type="checkbox">
+        </label>
+
+        <div class="actions">
+          <button type="submit">Save settings</button>
+        </div>
+        <p id="form-status" class="status" role="status" aria-live="polite"></p>
+      </form>
+
+      <form id="window-automation-form" class="card">
+        <p class="eyebrow">Window automation</p>
+        <h2>Choose where Tab Bundlr runs</h2>
+        <p class="field-help">Use all Chrome windows, or choose any combination of the windows open right now. Leave every window unchecked to disable grouping everywhere.</p>
+        <div class="window-mode-options" role="radiogroup" aria-label="Window automation mode">
+          <label class="window-mode-row" for="window-mode-all">
+            <input id="window-mode-all" name="window-automation-mode" type="radio" value="all">
+            <span>
+              <strong>All windows</strong>
+              <small>New Chrome windows are included automatically.</small>
+            </span>
+          </label>
+          <label class="window-mode-row" for="window-mode-selected">
+            <input id="window-mode-selected" name="window-automation-mode" type="radio" value="selected">
+            <span>
+              <strong>Selected windows</strong>
+              <small>Only checked windows use automatic grouping. With one selected window, new external web tabs opened in another existing window move here.</small>
+            </span>
+          </label>
+        </div>
+        <div id="window-automation-list" class="window-automation-list" aria-live="polite"></div>
+        <p class="field-help window-session-help">Tab Bundlr remembers Selected windows. If Chrome restarts with one window, that window is restored as the selected destination. With several restored windows, select the destination again so Tab Bundlr does not guess.</p>
+        <div class="actions">
+          <button type="submit">Save windows</button>
+          <button id="refresh-window-list" class="secondary" type="button">Refresh list</button>
+        </div>
+        <p id="window-automation-status" class="status" role="status" aria-live="polite"></p>
+      </form>
+
+      <section class="card">
+        <p class="eyebrow">Workspace settings</p>
+        <h2>Workspace settings</h2>
+        <p class="field-help">Enable only the workspace categories you want Tab Bundlr to manage, then arrange and color them here. Turning off a source category lets matching tabs fall through to another enabled URL rule. Existing open tabs are re-evaluated when a category changes.</p>
+        <div id="managed-group-order" class="managed-group-order" aria-live="polite"></div>
+        <p id="managed-group-order-status" class="status" role="status" aria-live="polite"></p>
+        <div class="browser-page-setting">
+          <label for="browser-page-smart-group">Browser pages</label>
+          <select id="browser-page-smart-group">
+            <option value="">Ignore browser pages</option>
+          </select>
+          <p class="field-help">Optionally keep <code>chrome://</code> pages such as Extensions and Settings in one standard Smart Group. This does not create a broad URL rule.</p>
+          <p id="browser-page-smart-group-status" class="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Smart groups</p>
+        <h2>Personal tab rules</h2>
+        <p class="field-help">Create an explicit URL rule for a named group. For example, use <code>Documentation</code> and <code>https://docs.example.com/product/</code>. Matching deeper pages will join that Smart Group. Use Move up and Move down here to set the individual Smart Group order.</p>
+        <form id="smart-group-form" class="smart-group-form">
+          <div>
+            <label for="smart-group-name">Group name</label>
+            <input id="smart-group-name" type="text" maxlength="80" placeholder="My Work" required>
+          </div>
+          <div>
+            <label for="smart-group-pattern">URL prefix</label>
+            <input id="smart-group-pattern" type="url" placeholder="https://docs.example.com/product/" required>
+            <p id="smart-group-overlap" class="rule-warning" aria-live="polite"></p>
+          </div>
+          <div class="actions">
+            <button type="submit">Save Smart Group</button>
+          </div>
+          <p id="smart-group-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+        <div id="smart-groups" class="trained-rules" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Saved destinations</p>
+        <h2>Workspace link rules</h2>
+        <p class="field-help">Teach creates these rules from the popup, and you can add or edit them here. A more specific saved destination can override a broader Smart Group prefix.</p>
+        <form id="client-rule-form" class="client-rule-form">
+          <label for="client-rule-name">Workspace name</label>
+          <input id="client-rule-name" type="text" maxlength="80" placeholder="Project Atlas" required>
+          <label for="client-rule-epic-id">Workspace ID</label>
+          <input id="client-rule-epic-id" type="text" placeholder="project-atlas" required>
+          <label for="client-rule-pattern">URL prefix</label>
+          <input id="client-rule-pattern" type="url" placeholder="https://admin.shopify.com/store/example" required>
+          <p id="client-rule-overlap" class="rule-warning" aria-live="polite"></p>
+          <div class="actions">
+            <button id="client-rule-submit" type="submit">Add rule</button>
+            <button id="client-rule-cancel" class="secondary" type="button" hidden>Cancel</button>
+          </div>
+          <p id="client-rule-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+        <div id="trained-rules" class="trained-rules" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Rule tester</p>
+        <h2>Test a URL</h2>
+        <p class="field-help">See every matching Smart Group and saved workspace rule in priority order. The longest prefix wins, and Smart Groups win exact-length ties.</p>
+        <form id="rule-tester-form" class="rule-tester-form">
+          <label for="rule-tester-url">URL</label>
+          <input id="rule-tester-url" type="url" placeholder="https://docs.example.com/product/setup" required>
+          <div class="actions">
+            <button type="submit">Test URL</button>
+          </div>
+        </form>
+        <div id="rule-tester-result" class="rule-tester-result" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Optional integrations</p>
+        <h2>Workspace Sources</h2>
+        <p class="field-help">Workspace Sources are visible JSON profiles. They may read metadata from approved HTTPS APIs using GET requests only. Imported sources stay disabled until you review and enable them.</p>
+        <div id="workspace-sources" class="trained-rules" aria-live="polite"></div>
+        <form id="workspace-source-form" class="smart-group-form">
+          <label for="workspace-source-json">Source JSON</label>
+          <textarea id="workspace-source-json" rows="12" spellcheck="false" placeholder='{"schemaVersion":1,"id":"tracker","name":"Project Tracker"}' required></textarea>
+          <div class="actions">
+            <button type="submit">Save disabled source</button>
+            <button id="workspace-source-clear" class="secondary" type="button">Clear</button>
+          </div>
+          <p id="workspace-source-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Backup</p>
+        <h2>Export or import settings</h2>
+        <p class="field-help">Export grouping rules, Workspace Source definitions, colors, ordering, and review preferences. Credentials, open tabs, paused windows, Chrome group IDs, Focus holds, and undo history are excluded. Imported sources remain disabled and require their credentials again.</p>
+        <div class="actions">
+          <button id="export-settings" type="button">Export JSON</button>
+          <label class="file-button secondary" for="import-settings">Import JSON</label>
+          <input id="import-settings" type="file" accept="application/json,.json" hidden>
+        </div>
+        <details id="backup-preview-panel" class="backup-preview" hidden>
+          <summary>View exported JSON</summary>
+          <div class="backup-preview-actions">
+            <button id="copy-backup" class="secondary" type="button" hidden>Copy JSON</button>
+          </div>
+          <pre id="backup-preview" aria-label="Exported Tab Bundlr JSON"></pre>
+        </details>
+        <p id="backup-status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <p class="help">Tab Bundlr has no hosted account, analytics, advertising, or cloud synchronization.</p>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

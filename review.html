@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tab Bundlr tab review</title>
+    <link rel="stylesheet" href="review.css">
+  </head>
+  <body>
+    <main class="review-shell">
+      <header class="review-header">
+        <div>
+          <p class="eyebrow">Tab Bundlr</p>
+          <h1>Review tabs</h1>
+          <p class="lede">Assign unrecognized tabs, review duplicate URLs, inspect possible stale tabs, and undo recent moves.</p>
+        </div>
+        <button id="refresh-review" class="secondary" type="button">Refresh</button>
+      </header>
+
+      <section class="review-summary card" aria-live="polite">
+        <strong id="review-summary-title">Loading tab review…</strong>
+        <span id="review-summary-detail"></span>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Unassigned inbox</p>
+            <h2>Tabs needing a decision</h2>
+          </div>
+          <span id="unassigned-count" class="count-pill">0</span>
+        </div>
+        <p class="field-help">These tabs have no Workspace Source assignment, Smart Group prefix, saved workspace rule, or known opener relationship. Tabs in manual Chrome groups and pinned tabs stay out of this inbox.</p>
+        <div id="unassigned-list" class="review-list" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Duplicate review</p>
+            <h2>Same URL clusters</h2>
+          </div>
+          <span id="duplicate-count" class="count-pill">0</span>
+        </div>
+        <p class="field-help">Fragments and trailing slashes are ignored. Query strings are preserved because they can represent meaningful page state.</p>
+        <div id="duplicate-list" class="review-list" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Activity</p>
+            <h2>Recent tab moves</h2>
+          </div>
+          <span id="activity-count" class="count-pill">0</span>
+        </div>
+        <p class="field-help">Tab Bundlr keeps the latest 20 moves locally. Undo is available while the tab still remains in the recorded destination group.</p>
+        <div id="activity-list" class="review-list" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Stale review</p>
+            <h2>Probably stale tabs</h2>
+          </div>
+          <label class="threshold-control" for="stale-days">
+            Older than
+            <select id="stale-days">
+              <option value="1">1 day</option>
+              <option value="3">3 days</option>
+              <option value="5">5 days</option>
+              <option value="7">1 week</option>
+              <option value="14">2 weeks</option>
+              <option value="30">30 days</option>
+              <option value="60">2 months</option>
+            </select>
+          </label>
+        </div>
+        <p class="field-help">Suggestions use last accessed time. Active and pinned tabs are protected and cannot be selected for closing.</p>
+        <div class="review-toolbar">
+          <span id="stale-count" class="count-pill">0</span>
+          <button id="close-selected-stale" class="secondary" type="button" disabled>Close selected</button>
+        </div>
+        <div id="stale-list" class="review-list" aria-live="polite"></div>
+      </section>
+
+      <p id="review-status" class="status" role="status" aria-live="polite"></p>
+    </main>
+    <dialog id="assign-dialog">
+      <form id="assign-form" method="dialog">
+        <p class="eyebrow">Unassigned inbox</p>
+        <h2>Assign tab</h2>
+        <p id="assign-tab-title" class="dialog-tab-title"></p>
+        <label for="assign-destination">Destination</label>
+        <select id="assign-destination" required></select>
+        <div id="assign-pattern-fields">
+          <label for="assign-pattern">URL prefix</label>
+          <input id="assign-pattern" type="url" required>
+          <p class="field-help">Edit the suggested prefix before saving. More specific prefixes override broader matches.</p>
+          <p id="assign-overlap" class="dialog-warning" role="status" aria-live="polite"></p>
+        </div>
+        <p id="assign-status" class="status" role="status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="assign-cancel" class="secondary" type="button">Cancel</button>
+          <button type="submit">Assign</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="review.js"></script>
+  </body>
+</html>

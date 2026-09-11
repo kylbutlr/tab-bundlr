@@ -1,0 +1,70 @@
+@font-face { font-family: "Geist Sans"; src: url("fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { color-scheme: dark; --canvas: #0d1010; --surface: #171b1b; --raised: #1d2222; --border: #303838; --border-strong: #465351; --text: #f3f7f5; --muted: #a9b5b2; --accent: #a9cec2; --accent-text: #111; --warn: #f2c46f; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--canvas); color: var(--text); font: 15px/1.45 "Geist Sans", Inter, system-ui, sans-serif; }
+.review-shell { width: min(920px, calc(100% - 40px)); margin: 44px auto 64px; }
+.review-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.eyebrow { margin: 0 0 6px; color: var(--accent); font: 600 12px/1.2 "Geist Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+h1 { margin: 0; font-size: clamp(32px, 6vw, 48px); line-height: 1.05; letter-spacing: -.04em; }
+h2 { margin: 0; font-size: 22px; line-height: 1.15; }
+.lede, .field-help, .status { color: var(--muted); }
+.lede { max-width: 620px; margin: 14px 0 0; }
+.card { padding: 22px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.review-summary { display: grid; gap: 4px; }
+.review-summary span { color: var(--muted); font-size: 13px; }
+.section-heading, .review-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.review-toolbar { padding-bottom: 10px; }
+.field-help { margin: 10px 0 16px; font-size: 13px; }
+.count-pill { min-width: 28px; padding: 4px 8px; border-radius: 999px; background: var(--raised); color: var(--accent); font: 600 12px "Geist Mono", monospace; text-align: center; }
+.threshold-control { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
+select, button, input { font: inherit; }
+select, input { min-height: 34px; padding: 0 9px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--raised); color: var(--text); }
+button { min-height: 36px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: var(--accent-text); cursor: pointer; font-weight: 650; }
+button.secondary { border-color: var(--border-strong); background: transparent; color: var(--text); }
+button:disabled { cursor: not-allowed; opacity: .45; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.review-list { display: grid; gap: 10px; }
+.review-empty { margin: 0; color: var(--muted); font-size: 13px; }
+.unassigned-tab, .activity-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--raised); }
+.unassigned-reason { margin: 7px 0 0; color: var(--warn); font-size: 12px; }
+.unassigned-actions { display: flex; gap: 8px; }
+.unassigned-actions button, .activity-row button { min-height: 32px; padding: 0 10px; font-size: 12px; }
+.duplicate-cluster { padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--raised); }
+.duplicate-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.duplicate-url { min-width: 0; overflow: hidden; color: var(--text); font: 600 13px/1.3 "Geist Mono", monospace; text-overflow: ellipsis; white-space: nowrap; }
+.duplicate-heading small { color: var(--muted); white-space: nowrap; }
+.duplicate-tabs { display: grid; gap: 6px; margin-top: 12px; }
+.review-tab { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px; border-top: 1px solid var(--border); }
+.review-tab-copy { min-width: 0; }
+.review-tab-copy strong, .review-tab-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-tab-copy strong { font-size: 13px; }
+.review-tab-copy small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.review-tab-state { color: var(--accent); font: 600 10px "Geist Mono", monospace; text-transform: uppercase; }
+.review-tab-state.protected { color: var(--warn); }
+.review-tab-action { min-height: 28px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: transparent; color: var(--accent); cursor: pointer; }
+.review-tab-action:hover { border-color: var(--accent); }
+.keep-control { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.keep-control input { accent-color: var(--accent); }
+.cluster-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.stale-row { grid-template-columns: auto minmax(0, 1fr) auto; border: 1px solid var(--border); border-radius: 9px; background: var(--raised); }
+.stale-row .review-tab-copy small { color: var(--warn); }
+.status { min-height: 24px; margin: 12px 0 0; }
+dialog { width: min(480px, calc(100% - 32px)); padding: 20px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); color: var(--text); box-shadow: 0 18px 50px rgb(0 0 0 / 45%); }
+dialog::backdrop { background: rgb(0 0 0 / 62%); }
+dialog h2 { margin-bottom: 8px; }
+dialog label { display: block; margin: 14px 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+dialog select, dialog input { width: 100%; }
+.dialog-tab-title { margin: 0; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.dialog-warning { min-height: 18px; margin: 8px 0 0; color: var(--warn); font-size: 12px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+@media (max-width: 640px) {
+  .review-shell { width: min(100% - 24px, 920px); margin-top: 24px; }
+  .review-header, .section-heading { align-items: flex-start; flex-direction: column; }
+  .threshold-control { width: 100%; justify-content: space-between; }
+  .threshold-control select { flex: 1; }
+  .review-tab { grid-template-columns: auto minmax(0, 1fr); }
+  .review-tab > button, .review-tab-state { grid-column: 2; justify-self: start; }
+  .unassigned-tab, .activity-row { grid-template-columns: 1fr; }
+  .unassigned-actions { justify-content: flex-start; }
+}

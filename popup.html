@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tab Bundlr</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header class="popup-header">
+        <div>
+          <p class="eyebrow">Tab Bundlr</p>
+          <h1>Managed groups</h1>
+        </div>
+        <div class="header-actions">
+          <div class="header-action-buttons">
+            <button id="fix-window" class="header-button" type="button" title="Regroup recognized tabs, skipping tabs in manual Chrome groups">Fix</button>
+            <button id="organize-window" class="header-button" type="button" title="Order Tab Bundlr-managed groups, leaving pinned tabs and manual groups untouched">Organize</button>
+          </div>
+          <span id="state-pill" class="pill">Loading</span>
+        </div>
+      </header>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <section id="current-workspace" class="current-workspace" aria-live="polite"></section>
+      <section id="review-tabs" aria-live="polite"></section>
+      <section id="groups" class="groups" aria-live="polite"></section>
+      <div class="popup-actions">
+        <button id="review-tabs-page" class="secondary" type="button">Review tabs</button>
+        <button id="undo" class="secondary" type="button">Undo last move</button>
+        <button id="settings" class="link-button" type="button">Settings</button>
+      </div>
+    </main>
+    <dialog id="smart-group-dialog">
+      <form id="smart-group-dialog-form" method="dialog">
+        <p class="eyebrow">Smart groups</p>
+        <h2 id="smart-group-dialog-title">Add URL to a Smart Group</h2>
+        <label for="smart-group-dialog-select">Smart Group</label>
+        <select id="smart-group-dialog-select" required></select>
+        <div id="smart-group-dialog-new-fields" hidden>
+          <label for="smart-group-dialog-name">New Smart Group name</label>
+          <input id="smart-group-dialog-name" type="text" maxlength="80" placeholder="Project Atlas">
+        </div>
+        <label for="smart-group-dialog-pattern">URL prefix</label>
+        <input id="smart-group-dialog-pattern" type="url" required>
+        <p class="dialog-help">Edit this prefix before saving. A trailing hyphen can match names that continue after it.</p>
+        <p id="smart-group-dialog-overlap" class="dialog-warning" role="status" aria-live="polite"></p>
+        <p id="smart-group-dialog-status" class="dialog-status" role="status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="smart-group-dialog-cancel" class="secondary" type="button">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="client-rule-dialog">
+      <form id="client-rule-dialog-form" method="dialog">
+        <p class="eyebrow">Saved destinations</p>
+        <h2 id="client-rule-dialog-title">Add workspace rule</h2>
+        <label for="client-rule-dialog-select">Workspace</label>
+        <select id="client-rule-dialog-select" required></select>
+        <div id="client-rule-dialog-new-fields" hidden>
+          <label for="client-rule-dialog-name">New workspace name</label>
+          <input id="client-rule-dialog-name" type="text" maxlength="80" placeholder="Project Atlas">
+          <label for="client-rule-dialog-epic-id">Workspace ID</label>
+          <input id="client-rule-dialog-epic-id" type="text" placeholder="project-atlas">
+        </div>
+        <label for="client-rule-dialog-pattern">URL prefix</label>
+        <input id="client-rule-dialog-pattern" type="url" required>
+        <p class="dialog-help">Use a more specific prefix when this page should override a broader Smart Group.</p>
+        <p id="client-rule-dialog-overlap" class="dialog-warning" role="status" aria-live="polite"></p>
+        <p id="client-rule-dialog-status" class="dialog-status" role="status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="client-rule-dialog-cancel" class="secondary" type="button">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
