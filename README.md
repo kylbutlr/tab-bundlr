@@ -4,16 +4,43 @@ Tab Bundlr organizes browser tabs into predictable workspaces using transparent 
 
 It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cloud synchronization, or project-management service is required. Settings stay in Chrome extension storage unless the user explicitly exports them.
 
-## Start here
+[Product overview](https://kylbutlr.com/apps/tab-bundlr) · [Report an issue](https://github.com/kylbutlr/tab-bundlr/issues)
 
-1. Follow [Installation](docs/installation.md).
-2. Create a Smart Group such as `Documentation` with `https://docs.example.com/product/`.
-3. Open the popup and use **Fix** to apply saved rules in the current window.
-4. Turn on **Automatic Tab Bundling** only if you want matching tabs handled as they open or navigate.
+## Status
+
+Tab Bundlr 0.8.0 is available as public source and can be loaded locally in Chrome. It has not been published to the Chrome Web Store. The core local workflow requires no account or external integration; two optional provider and migration checks remain documented in the [public beta verification checklist](docs/verification.md).
+
+## Highlights
+
+- Organizes tabs into persistent Smart Groups with transparent, testable URL rules.
+- Keeps automatic bundling off by default and protects pinned tabs, manual groups, paused windows, and focus holds.
+- Provides deliberate review flows for unassigned, duplicate, and stale tabs, with local activity history and undo.
+- Supports optional, visible Workspace Sources without making any provider mandatory.
+
+## Quick start
+
+### Install locally
+
+1. Download or clone this repository.
+2. Open `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Choose **Load unpacked** and select the directory containing `manifest.json`.
+5. Pin Tab Bundlr from Chrome's Extensions menu.
+6. Open **Extension options** from the Tab Bundlr details page or popup.
+
+### Create a first workspace
+
+1. Leave **Automatic Tab Bundling** off while learning the workflow.
+2. Under **Personal tab rules**, create a Smart Group such as `Documentation` with `https://docs.example.com/product/`.
+3. Open matching pages, then open the popup and choose **Fix**.
+4. Review the result and use **Undo** if needed.
+5. Turn on **Automatic Tab Bundling** only if you want matching tabs handled as they open or navigate.
 
 Fresh installations start in manual mode. The popup's **Fix**, **Organize**, review, focus, home-base, pause, and undo actions remain available without an external integration.
 
-## Product behavior
+See the complete [installation guide](docs/installation.md) for update and reload instructions.
+
+## How it works
 
 ### Workspaces and URL rules
 
@@ -86,7 +113,9 @@ Settings backups include rules, source definitions, colors, ordering, behavior p
 
 Imported Workspace Sources are disabled, and importing settings clears locally saved Workspace Source credentials so an old secret cannot be rebound to a changed source definition. Legacy version 1 backups may be imported, but embedded tokens are ignored and must be entered again. In-place migration from v0.7 preserves the existing local token separately. See [Privacy](docs/privacy.md).
 
-## Permissions
+## Privacy and permissions
+
+Tab Bundlr has no hosted backend, cloud synchronization, telemetry, advertising SDK, or analytics service. Workspace rules, optional source credentials, behavior preferences, home-base URLs, and recent move history stay in Chrome extension storage. Settings exports exclude Workspace Source credentials and legacy tokens.
 
 - `storage` stores local settings and session state.
 - `tabs` reads tab URLs and titles and performs visible tab moves, activation, and user-confirmed closure.
@@ -94,6 +123,17 @@ Imported Workspace Sources are disabled, and importing settings clears locally s
 - Optional `https://*/*` host access allows a user-authored Workspace Source to request its declared HTTPS API origin. Tab Bundlr requests exact origins only when the user enables that source.
 
 Tab Bundlr does not inject content scripts, read page contents, request cookies, or include analytics.
+
+See the complete [privacy policy](docs/privacy.md) and [Workspace Source security model](docs/workspace-sources.md).
+
+## Known limitations
+
+- Pinned tabs, manual Chrome groups, and paused windows are protected. Browser-owned pages are ignored unless explicitly routed to a standard Smart Group.
+- Undo requires the affected tab to still exist in the recorded destination.
+- Workspace Sources depend on user-approved HTTPS origin access and the configured provider response retaining the expected public fields.
+- Tab Bundlr currently targets Chrome and does not provide cross-device synchronization.
+
+The public beta does not provide accounts, hosted profiles, AI categorization, mandatory integrations, enterprise administration, or silent general-purpose tab closure.
 
 ## Development
 
@@ -104,7 +144,9 @@ npm run package
 
 The package command creates a public extension ZIP from the explicit allowlist in `scripts/package-extension.mjs` and scans it for excluded private fixtures and known credential values.
 
-## Public beta materials
+Packaging creates a local artifact and does not publish a GitHub release or Chrome Web Store listing.
+
+## Documentation
 
 - [Installation](docs/installation.md)
 - [Privacy](docs/privacy.md)
@@ -114,9 +156,15 @@ The package command creates a public extension ZIP from the explicit allowlist i
 - [Workspace Source format](docs/workspace-sources.md)
 - [Verification checklist](docs/verification.md)
 
-## Non-goals
+## App Stylr
 
-The public beta does not provide cloud synchronization, accounts, hosted profiles, AI categorization, mandatory integrations, enterprise administration, or silent general-purpose tab closure.
+Tab Bundlr follows the pinned [App Stylr v0.2.0](https://github.com/kylbutlr/app-stylr/tree/v0.2.0) contract for its standalone popup and options surfaces. Review the current [App Stylr Visual Reference](https://app-stylr.netlify.app/) as guidance, but upgrade the pinned release deliberately before adopting newer contract requirements.
+
+The popup width exception and current styling boundary are documented in [docs/app-stylr-exceptions.md](docs/app-stylr-exceptions.md).
+
+## Support
+
+Start with the [support guide](docs/support.md) and [troubleshooting guide](docs/troubleshooting.md), or open a report in the [public issue tracker](https://github.com/kylbutlr/tab-bundlr/issues). Include Chrome and Tab Bundlr versions, the action attempted, and redacted source definitions when relevant. Never include API tokens, authorization headers, private URLs, exported browser data, or confidential workspace information.
 
 ## License
 

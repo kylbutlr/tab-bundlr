@@ -13,4 +13,4 @@ Never include API tokens, authorization headers, private URLs, exported browser 
 
 Before filing, follow [Troubleshooting](troubleshooting.md) and run the relevant checks in [Verification](verification.md).
 
-The issue tracker remains private until the public beta repository is explicitly approved for public access. A public support destination must be confirmed before store submission.
+The [Tab Bundlr issue tracker](https://github.com/kylbutlr/tab-bundlr/issues) is the public support destination. Configure it as the support URL before Chrome Web Store submission.
