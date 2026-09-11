@@ -157,3 +157,24 @@ test('redacts source credentials from API errors', async () => {
     (error) => error.message.includes('[redacted]') && !error.message.includes('secret-value'),
   );
 });
+
+test('times out a stalled Workspace Source request', async () => {
+  const source = shortcutWorkspaceSource({ enabled: true });
+  const [match] = matchingWorkspaceSources([source], 'https://app.shortcut.com/workspace/epic/73');
+  const stalledRequest = resolveWorkspaceSourceMatch(
+    match,
+    { apiToken: 'example-token' },
+    (_url, options) => new Promise((_resolve, reject) => {
+      options.signal?.addEventListener('abort', () => reject(options.signal.reason));
+    }),
+    { requestTimeoutMs: 5 },
+  );
+
+  await assert.rejects(
+    Promise.race([
+      stalledRequest,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Source request did not time out.')), 50)),
+    ]),
+    /request timed out/i,
+  );
+});

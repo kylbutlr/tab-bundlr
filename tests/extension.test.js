@@ -9,7 +9,7 @@ test('declares a local-first Manifest V3 extension with optional network access'
   const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Tab Bundlr');
-  assert.equal(manifest.version, '0.8.0');
+  assert.equal(manifest.version, '0.8.1');
   assert.equal(packageJson.version, manifest.version);
   assert.deepEqual(manifest.permissions, ['storage', 'tabs', 'tabGroups']);
   assert.equal('host_permissions' in manifest, false);

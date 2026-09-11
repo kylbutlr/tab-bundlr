@@ -332,6 +332,41 @@ function invalidateLocalSnapshots(...names) {
   names.forEach((name) => localSnapshotRequests.delete(name));
 }
 
+function batchedStorageUpdater(load, store) {
+  const pending = [];
+  let flushRequest = null;
+
+  function scheduleFlush() {
+    if (flushRequest) return;
+    flushRequest = Promise.resolve()
+      .then(async () => {
+        while (pending.length) {
+          const batch = pending.splice(0);
+          try {
+            const loaded = await load();
+            let current = Array.isArray(loaded) ? [...loaded] : { ...loaded };
+            batch.forEach(({ update }) => {
+              current = update(current) || current;
+            });
+            await store(current);
+            batch.forEach(({ resolve }) => resolve(current));
+          } catch (error) {
+            batch.forEach(({ reject }) => reject(error));
+          }
+        }
+      })
+      .finally(() => {
+        flushRequest = null;
+        if (pending.length) scheduleFlush();
+      });
+  }
+
+  return (update) => new Promise((resolve, reject) => {
+    pending.push({ update, resolve, reject });
+    scheduleFlush();
+  });
+}
+
 async function persistPausedWindowIds() {
   await pausedWindowIdsReady;
   await chrome.storage.session.set({
@@ -533,8 +568,13 @@ async function getRecords() {
   return stored[GROUP_RECORDS_STORAGE_KEY] || {};
 }
 
+const updateRecords = batchedStorageUpdater(
+  getRecords,
+  (records) => chrome.storage.local.set({ [GROUP_RECORDS_STORAGE_KEY]: records }),
+);
+
 async function setRecords(records) {
-  await chrome.storage.local.set({ [GROUP_RECORDS_STORAGE_KEY]: records });
+  return updateRecords(() => records);
 }
 
 async function getContexts() {
@@ -542,8 +582,13 @@ async function getContexts() {
   return stored[TAB_CONTEXTS_STORAGE_KEY] || {};
 }
 
+const updateContexts = batchedStorageUpdater(
+  getContexts,
+  (contexts) => chrome.storage.local.set({ [TAB_CONTEXTS_STORAGE_KEY]: contexts }),
+);
+
 async function setContexts(contexts) {
-  await chrome.storage.local.set({ [TAB_CONTEXTS_STORAGE_KEY]: contexts });
+  return updateContexts(() => contexts);
 }
 
 async function getFocusHeldTabs() {
@@ -635,14 +680,16 @@ function mergeSavedClientGroupEntries(entries) {
     || left.epicName.localeCompare(right.epicName, undefined, { sensitivity: 'base' }));
 }
 
+const updateSavedClientGroups = batchedStorageUpdater(
+  getSavedClientGroups,
+  (groups) => chrome.storage.local.set({ [SAVED_CLIENT_GROUPS_STORAGE_KEY]: groups }),
+);
+
 async function rememberSavedClientGroups(entries) {
-  const current = await getSavedClientGroups();
-  const next = mergeSavedClientGroupEntries([
+  return updateSavedClientGroups((current) => mergeSavedClientGroupEntries([
     ...current,
     ...(Array.isArray(entries) ? entries : []),
-  ]);
-  await chrome.storage.local.set({ [SAVED_CLIENT_GROUPS_STORAGE_KEY]: next });
-  return next;
+  ]));
 }
 
 async function getSmartGroups() {
@@ -712,15 +759,17 @@ async function autoOrganizeGroupsEnabled() {
 }
 
 async function rememberTabContext(tabId, context) {
-  const contexts = await getContexts();
-  contexts[String(tabId)] = context;
-  await setContexts(contexts);
+  await updateContexts((contexts) => {
+    contexts[String(tabId)] = context;
+    return contexts;
+  });
 }
 
 async function forgetTabContext(tabId) {
-  const contexts = await getContexts();
-  delete contexts[String(tabId)];
-  await setContexts(contexts);
+  await updateContexts((contexts) => {
+    delete contexts[String(tabId)];
+    return contexts;
+  });
 }
 
 async function contextForTab(tabId) {
@@ -729,13 +778,11 @@ async function contextForTab(tabId) {
 }
 
 async function pruneContexts(openTabs = null) {
-  const [tabs, contexts] = await Promise.all([
-    openTabs || chrome.tabs.query({}),
-    getContexts(),
-  ]);
+  const tabs = openTabs || await chrome.tabs.query({});
   const openTabIds = new Set(tabs.map((tab) => String(tab.id)));
-  const pruned = Object.fromEntries(Object.entries(contexts).filter(([tabId]) => openTabIds.has(tabId)));
-  if (Object.keys(pruned).length !== Object.keys(contexts).length) await setContexts(pruned);
+  await updateContexts((contexts) => Object.fromEntries(
+    Object.entries(contexts).filter(([tabId]) => openTabIds.has(tabId)),
+  ));
 }
 
 async function cachedWorkspaceSourceResolution(match, sourceSecrets) {
@@ -971,7 +1018,7 @@ async function ensureEpicGroup(windowId, epicId, epicName, targetTabId, targetGr
       group = await chrome.tabGroups.update(group.id, { title: managedTitle, color });
     }
 
-    records[key] = {
+    const nextRecord = {
       epicId: String(epicId),
       epicName: normalizedName,
       workspaceType: String(workspaceType || 'epic'),
@@ -983,7 +1030,10 @@ async function ensureEpicGroup(windowId, epicId, epicName, targetTabId, targetGr
       windowId: Number(windowId),
       updatedAt: new Date().toISOString(),
     };
-    await setRecords(records);
+    await updateRecords((current) => {
+      current[key] = nextRecord;
+      return current;
+    });
     return group;
   })().finally(() => groupEnsureRequests.delete(key));
 
@@ -1680,11 +1730,56 @@ async function safelyProcess(tab, reason, options = {}) {
   return request;
 }
 
+async function restoreGroupRecordsFromContexts(tabs, groups, records, contexts) {
+  const repairs = [];
+  groups.forEach((group) => {
+    if (recordForGroup(records, group.id, group.windowId)) return;
+    const candidates = tabs
+      .filter((tab) => Number(tab.windowId) === Number(group.windowId) && Number(tab.groupId) === Number(group.id))
+      .map((tab) => contexts[String(tab.id)])
+      .filter((context) => (
+        context
+        && Number(context.windowId) === Number(group.windowId)
+        && Number(context.groupId) === Number(group.id)
+        && context.epicId
+        && context.epicName
+        && ['epic', 'iteration', 'smart', 'focus'].includes(String(context.workspaceType))
+      ));
+    if (!candidates.length) return;
+    const [context] = candidates;
+    const identity = [context.epicId, context.workspaceType, context.smartGroupId, context.focusGroupId].map(String).join(':');
+    if (candidates.some((candidate) => (
+      [candidate.epicId, candidate.workspaceType, candidate.smartGroupId, candidate.focusGroupId].map(String).join(':') !== identity
+    ))) return;
+    const key = groupRecordKey(group.windowId, context.epicId, context.workspaceType);
+    if (records[key]) return;
+    repairs.push([key, {
+      epicId: String(context.epicId),
+      epicName: normalizeEpicName(context.epicName),
+      workspaceType: String(context.workspaceType),
+      smartGroupId: context.smartGroupId ? String(context.smartGroupId) : null,
+      focusGroupId: context.focusGroupId ? String(context.focusGroupId) : null,
+      groupId: Number(group.id),
+      title: group.title || normalizeEpicName(context.epicName),
+      color: group.color,
+      windowId: Number(group.windowId),
+      updatedAt: new Date().toISOString(),
+    }]);
+  });
+  if (!repairs.length) return records;
+  return updateRecords((current) => {
+    repairs.forEach(([key, record]) => {
+      if (!current[key] && !recordForGroup(current, record.groupId, record.windowId)) current[key] = record;
+    });
+    return current;
+  });
+}
+
 async function syncExistingStoryTabs() {
   try {
     const tabs = await chrome.tabs.query({});
     await pruneContexts(tabs);
-    const [rules, smartGroups, enabledTypes, browserPageGroupId, sources, records, openGroups] = await Promise.all([
+    const [rules, smartGroups, enabledTypes, browserPageGroupId, sources, savedRecords, openGroups, contexts] = await Promise.all([
       getTrainedRules(),
       getSmartGroups(),
       getManagedGroupTypeEnabled(),
@@ -1692,7 +1787,9 @@ async function syncExistingStoryTabs() {
       getWorkspaceSources(),
       getRecords(),
       chrome.tabGroups.query({}),
+      getContexts(),
     ]);
+    const records = await restoreGroupRecordsFromContexts(tabs, openGroups, savedRecords, contexts);
     const knownManagedTitles = new Set(Object.values(records).flatMap((record) => [record?.title, record?.epicName]).filter(Boolean));
     const restorableGroupIds = new Set(openGroups
       .filter((group) => knownManagedTitles.has(group.title))

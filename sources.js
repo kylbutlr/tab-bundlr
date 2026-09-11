@@ -7,6 +7,7 @@ export const HOME_BASE_DUPLICATE_REVIEW = 'review';
 export const HOME_BASE_DUPLICATE_REMOVE_EXACT = 'remove-exact-inactive';
 export const OPENER_INHERITANCE_STORAGE_KEY = 'openerInheritance';
 export const DEFAULT_OPENER_INHERITANCE = true;
+export const DEFAULT_SOURCE_REQUEST_TIMEOUT_MS = 10_000;
 
 const PLACEHOLDER_PATTERN = /\{([A-Za-z][A-Za-z0-9_.-]*)\}/g;
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
@@ -234,7 +235,12 @@ function safeSourceError(source, status, payload, secrets) {
   return `${source.name} request failed (${status})${safeDetail ? `: ${safeDetail}` : ''}`;
 }
 
-export async function resolveWorkspaceSourceMatch(match, secrets, fetchImpl = globalThis.fetch) {
+export async function resolveWorkspaceSourceMatch(
+  match,
+  secrets,
+  fetchImpl = globalThis.fetch,
+  { requestTimeoutMs = DEFAULT_SOURCE_REQUEST_TIMEOUT_MS } = {},
+) {
   const { source, route, captures } = match;
   if (!source.enabled) return { status: 'disabled', sourceId: source.id };
   const context = { ...captures };
@@ -250,8 +256,30 @@ export async function resolveWorkspaceSourceMatch(match, secrets, fetchImpl = gl
     if (!source.permissionOrigins.some((pattern) => originPatternMatches(pattern, requestUrl))) {
       throw new Error(`${source.name} tried to use an API origin that is not declared in its profile.`);
     }
-    const response = await fetchImpl(requestUrl, { method: 'GET', headers, redirect: 'error' });
-    const payload = await response.json().catch(() => null);
+    const controller = new AbortController();
+    const timeoutMs = Number.isFinite(Number(requestTimeoutMs))
+      ? Math.max(1, Number(requestTimeoutMs))
+      : DEFAULT_SOURCE_REQUEST_TIMEOUT_MS;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    timeout?.unref?.();
+    let response;
+    let payload;
+    try {
+      response = await fetchImpl(requestUrl, {
+        method: 'GET',
+        headers,
+        redirect: 'error',
+        signal: controller.signal,
+      });
+      payload = await response.json().catch(() => null);
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw new Error(`${source.name} request timed out.`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
     if (!response.ok) throw new Error(safeSourceError(source, response.status, payload, secrets));
     Object.entries(step.extract).forEach(([key, paths]) => {
       context[key] = firstExtractedValue(payload, paths);
