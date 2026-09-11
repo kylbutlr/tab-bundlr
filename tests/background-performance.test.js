@@ -882,6 +882,231 @@ test('organizes from live tab positions when the strip changes during setup', as
   }
 });
 
+test('preserves every managed group record when different workspaces are grouped concurrently', async () => {
+  const windowId = 18;
+  const tabs = [
+    {
+      id: 181,
+      windowId,
+      groupId: -1,
+      index: 0,
+      active: false,
+      pinned: false,
+      title: 'Alpha dashboard',
+      url: 'https://alpha.example.com/dashboard',
+    },
+    {
+      id: 182,
+      windowId,
+      groupId: -1,
+      index: 1,
+      active: true,
+      pinned: false,
+      title: 'Beta dashboard',
+      url: 'https://beta.example.com/dashboard',
+    },
+  ];
+  const groups = [];
+  const localValues = {
+    settingsVersion: 2,
+    tabBundlrEnabled: true,
+    groupRecords: {},
+    smartGroups: [
+      { id: 'alpha', name: 'Alpha', patterns: ['https://alpha.example.com/'] },
+      { id: 'beta', name: 'Beta', patterns: ['https://beta.example.com/'] },
+    ],
+    trainedRules: [],
+    autoOrganizeGroups: false,
+  };
+  const sessionValues = {
+    sessionReconciled: true,
+    persistentHomeBasesReconciled: true,
+    pausedWindowIds: [],
+    windowAutomationMode: 'all',
+    selectedWindowIds: [],
+  };
+  let pendingRecordWrites = 0;
+  let releaseRecordWrites;
+  const recordWritesReady = new Promise((resolve) => { releaseRecordWrites = resolve; });
+  const cloningLocalStorage = {
+    async get(keys) {
+      const requested = Array.isArray(keys) ? keys : [keys];
+      return structuredClone(Object.fromEntries(requested
+        .filter((key) => Object.prototype.hasOwnProperty.call(localValues, key))
+        .map((key) => [key, localValues[key]])));
+    },
+    async set(next) {
+      if (Object.prototype.hasOwnProperty.call(next, 'groupRecords')) {
+        pendingRecordWrites += 1;
+        if (pendingRecordWrites === 2) releaseRecordWrites();
+        await Promise.race([
+          recordWritesReady,
+          new Promise((resolve) => setTimeout(resolve, 20)),
+        ]);
+      }
+      Object.assign(localValues, structuredClone(next));
+    },
+    async remove(keys) {
+      (Array.isArray(keys) ? keys : [keys]).forEach((key) => delete localValues[key]);
+    },
+  };
+  globalThis.chrome = {
+    storage: {
+      local: cloningLocalStorage,
+      session: storageArea(sessionValues),
+      onChanged: extensionEvent(),
+    },
+    tabs: {
+      async query(queryInfo = {}) {
+        return tabs
+          .filter((tab) => queryInfo.windowId === undefined || Number(tab.windowId) === Number(queryInfo.windowId))
+          .map((tab) => ({ ...tab }));
+      },
+      async group({ tabIds, groupId }) {
+        let destinationGroupId = Number(groupId);
+        if (!Number.isInteger(destinationGroupId)) {
+          destinationGroupId = 500 + groups.length;
+          groups.push({ id: destinationGroupId, windowId, title: '', color: 'grey' });
+        }
+        tabs.filter((tab) => tabIds.includes(tab.id)).forEach((tab) => { tab.groupId = destinationGroupId; });
+        return destinationGroupId;
+      },
+      onCreated: extensionEvent(),
+      onUpdated: extensionEvent(),
+      onDetached: extensionEvent(),
+      onAttached: extensionEvent(),
+      onRemoved: extensionEvent(),
+    },
+    tabGroups: {
+      async query({ windowId: queryWindowId } = {}) {
+        return groups
+          .filter((group) => queryWindowId === undefined || Number(group.windowId) === Number(queryWindowId))
+          .map((group) => ({ ...group }));
+      },
+      async update(groupId, changes) {
+        const group = groups.find((candidate) => Number(candidate.id) === Number(groupId));
+        Object.assign(group, changes);
+        return { ...group };
+      },
+      onCreated: extensionEvent(),
+      onMoved: extensionEvent(),
+    },
+    windows: {
+      async getAll() { return [{ id: windowId }]; },
+      onRemoved: extensionEvent(),
+    },
+    runtime: {
+      onMessage: extensionEvent(),
+      openOptionsPage() {},
+    },
+  };
+
+  try {
+    const worker = await import('../background.js?group-records=concurrent-workspaces');
+    await worker.TabBundlrBackground.syncExistingStoryTabs();
+
+    assert.deepEqual(
+      Object.keys(localValues.groupRecords).sort(),
+      [`${windowId}:smart:alpha`, `${windowId}:smart:beta`],
+    );
+    assert.deepEqual(Object.keys(localValues.tabContexts).sort(), ['181', '182']);
+    assert.equal(pendingRecordWrites, 1);
+  } finally {
+    delete globalThis.chrome;
+  }
+});
+
+test('restores a missing managed group record from its saved tab context', async () => {
+  const windowId = 19;
+  const groupId = 519;
+  const tab = {
+    id: 191,
+    windowId,
+    groupId,
+    index: 0,
+    active: true,
+    pinned: false,
+    title: 'Alpha dashboard',
+    url: 'https://alpha.example.com/dashboard',
+  };
+  const localValues = {
+    settingsVersion: 2,
+    tabBundlrEnabled: true,
+    groupRecords: {},
+    tabContexts: {
+      '191': {
+        epicId: 'smart:alpha',
+        epicName: 'Alpha',
+        groupId,
+        windowId,
+        source: 'smart',
+        workspaceType: 'smart',
+        smartGroupId: 'alpha',
+        focusGroupId: null,
+      },
+    },
+    smartGroups: [{ id: 'alpha', name: 'Alpha', patterns: ['https://alpha.example.com/'] }],
+    trainedRules: [],
+    autoOrganizeGroups: false,
+  };
+  const sessionValues = {
+    sessionReconciled: true,
+    persistentHomeBasesReconciled: true,
+    pausedWindowIds: [],
+    windowAutomationMode: 'all',
+    selectedWindowIds: [],
+  };
+  globalThis.chrome = {
+    storage: {
+      local: storageArea(localValues),
+      session: storageArea(sessionValues),
+      onChanged: extensionEvent(),
+    },
+    tabs: {
+      async query(queryInfo = {}) {
+        if (queryInfo.windowId === undefined || Number(queryInfo.windowId) === windowId) return [{ ...tab }];
+        return [];
+      },
+      async group() { throw new Error('Recovery should reuse the existing group.'); },
+      onCreated: extensionEvent(),
+      onUpdated: extensionEvent(),
+      onDetached: extensionEvent(),
+      onAttached: extensionEvent(),
+      onRemoved: extensionEvent(),
+    },
+    tabGroups: {
+      async query({ windowId: queryWindowId } = {}) {
+        return queryWindowId === undefined || Number(queryWindowId) === windowId
+          ? [{ id: groupId, windowId, title: 'Alpha', color: 'grey' }]
+          : [];
+      },
+      async update(_groupId, changes) {
+        return { id: groupId, windowId, title: 'Alpha', color: 'grey', ...changes };
+      },
+      onCreated: extensionEvent(),
+      onMoved: extensionEvent(),
+    },
+    windows: {
+      async getAll() { return [{ id: windowId }]; },
+      onRemoved: extensionEvent(),
+    },
+    runtime: {
+      onMessage: extensionEvent(),
+      openOptionsPage() {},
+    },
+  };
+
+  try {
+    const worker = await import('../background.js?group-records=restore-from-context');
+    await worker.TabBundlrBackground.syncExistingStoryTabs();
+
+    assert.equal(localValues.groupRecords[`${windowId}:smart:alpha`]?.groupId, groupId);
+    assert.equal(localValues.groupRecords[`${windowId}:smart:alpha`]?.title, 'Alpha');
+  } finally {
+    delete globalThis.chrome;
+  }
+});
+
 test('adopts an exact-name restored group when its recognized tabs outlive saved Chrome group IDs', async () => {
   const windowId = 31;
   const restoredGroupId = 401;

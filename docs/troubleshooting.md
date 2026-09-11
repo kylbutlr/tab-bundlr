@@ -17,6 +17,8 @@
 5. Confirm every request URL is HTTPS and covered by `permissionOrigins`.
 6. Check that the configured response property paths exist in the API response.
 
+Workspace Source requests stop after 10 seconds so a slow or unavailable provider cannot leave startup reconciliation or **Fix** pending indefinitely. Retry after the provider recovers; repeated failures remain cached briefly to avoid request storms.
+
 ## A tab remains in a Focus Group
 
 Drag it out of the Focus Group. Tab Bundlr then re-evaluates its normal rule. Disable Focus behavior on that Smart Group if temporary holds are no longer wanted.
