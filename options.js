@@ -55,6 +55,7 @@ import {
   homeBaseDuplicateActionFromStorage,
   openerInheritanceFromStorage,
 } from './settings.js';
+import { sourceAccessDisclosure } from './guidance.js';
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
@@ -116,13 +117,19 @@ const workspaceSourceForm = document.getElementById('workspace-source-form');
 const workspaceSourceJson = document.getElementById('workspace-source-json');
 const workspaceSourceClear = document.getElementById('workspace-source-clear');
 const workspaceSourceStatus = document.getElementById('workspace-source-status');
+const sourcePermissionDialog = document.getElementById('source-permission-dialog');
+const sourcePermissionCopy = document.getElementById('source-permission-copy');
+const sourcePermissionOrigins = document.getElementById('source-permission-origins');
+const sourcePermissionCancel = document.getElementById('source-permission-cancel');
+const sourcePermissionContinue = document.getElementById('source-permission-continue');
 const managedGroupTypes = [
-  { id: 'client', label: 'Source workspaces', detail: 'Workspace Sources and saved destination rules' },
-  { id: 'iteration', label: 'Source collections', detail: 'Timeboxes or collections supplied by Workspace Sources' },
+  { id: 'client', label: 'Connected workspaces', detail: 'Optional connections and saved destination rules' },
+  { id: 'iteration', label: 'Connected collections', detail: 'Timeboxes or collections supplied by optional connections' },
   { id: 'smart', label: 'Smart Groups', detail: 'Your explicit URL rules, in the individual order below' },
   { id: 'focus-smart', label: 'Focus Smart Groups', detail: 'The designated protected Smart Group' },
 ];
 let editingClientRulePattern = null;
+let pendingSourceAccess = null;
 
 function updateWindowAutomationControls() {
   const allWindows = windowModeAll.checked;
@@ -217,7 +224,7 @@ async function importSettings(file) {
     if (backup?.format !== BACKUP_FORMAT || ![1, BACKUP_VERSION].includes(backup?.version) || !plainObject(backup.settings)) {
       throw new Error('That file is not a supported Tab Bundlr settings backup.');
     }
-    if (!window.confirm('Import these Tab Bundlr settings? Supplied values will update the current settings and clear saved Workspace Source credentials.')) return;
+    if (!window.confirm('Import these Tab Bundlr settings? Supplied values will update the current settings and clear saved connection credentials.')) return;
     const current = await chrome.storage.local.get(BACKUP_STORAGE_KEYS);
     const settings = settingsImportChanges(current, backup.settings);
     await chrome.storage.local.remove([...RUNTIME_STORAGE_KEYS, CLIENT_CATALOG_STORAGE_KEY]);
@@ -225,8 +232,8 @@ async function importSettings(file) {
     await Promise.all([loadSettings(), renderTrainedRules(), renderSmartGroups(), renderManagedGroupOrder(), renderWorkspaceSources()]);
     await chrome.runtime.sendMessage({ type: 'SYNC_NOW' });
     backupStatus.textContent = backup.version === 1
-      ? 'Imported legacy settings without its saved token. Add credentials to a Workspace Source before enabling it.'
-      : 'Imported settings. Workspace Sources are disabled and credentials were not imported.';
+      ? 'Imported legacy settings without its saved token. Add credentials to the matching connection before enabling it.'
+      : 'Imported settings. Optional connections are disabled and credentials were not imported.';
   } catch (error) {
     backupStatus.textContent = error instanceof Error ? error.message : 'The settings backup could not be imported.';
   } finally {
@@ -435,14 +442,14 @@ async function saveWorkspaceSourceState(sourceId, enabled) {
   const stored = await chrome.storage.local.get([WORKSPACE_SOURCES_STORAGE_KEY, WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
   const sources = normalizeWorkspaceSources(stored[WORKSPACE_SOURCES_STORAGE_KEY]);
   const source = sources.find((candidate) => candidate.id === sourceId);
-  if (!source) throw new Error('That Workspace Source no longer exists.');
+  if (!source) throw new Error('That connection no longer exists. Reload this page and try again.');
   const secrets = plainObject(stored[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
   if (enabled && source.credentials.some((credential) => !String(secrets[source.id]?.[credential.id] || '').trim())) {
     throw new Error(`Save the required credentials for ${source.name} first.`);
   }
   if (enabled && source.permissionOrigins.length) {
     const granted = await chrome.permissions.request({ origins: source.permissionOrigins });
-    if (!granted) throw new Error(`${source.name} remains disabled because API access was not granted.`);
+    if (!granted) throw new Error(`${source.name} remains off because service access was not granted.`);
   }
   await chrome.storage.local.set({
     [WORKSPACE_SOURCES_STORAGE_KEY]: sources.map((candidate) => (
@@ -450,6 +457,35 @@ async function saveWorkspaceSourceState(sourceId, enabled) {
     )),
   });
   if (!enabled) await releaseUnusedSourceOrigins(source.permissionOrigins);
+}
+
+function showWorkspaceSourceStatus(message, tone = 'info') {
+  workspaceSourceStatus.textContent = message;
+  workspaceSourceStatus.dataset.tone = tone;
+}
+
+function openSourcePermissionDisclosure(source) {
+  const disclosure = sourceAccessDisclosure(source, false);
+  pendingSourceAccess = source;
+  sourcePermissionCopy.textContent = `${disclosure.name} needs permission before it can make read-only requests to:`;
+  sourcePermissionOrigins.replaceChildren(...disclosure.origins.map((origin) => {
+    const item = document.createElement('li');
+    item.textContent = origin;
+    return item;
+  }));
+  sourcePermissionDialog.showModal();
+}
+
+async function applyWorkspaceSourceState(source, enabled, successMessage) {
+  try {
+    await saveWorkspaceSourceState(source.id, enabled);
+    showWorkspaceSourceStatus(successMessage, 'success');
+    await renderWorkspaceSources();
+    return true;
+  } catch (error) {
+    showWorkspaceSourceStatus(error.message || 'This connection could not be updated.', 'error');
+    return false;
+  }
 }
 
 async function renderWorkspaceSources() {
@@ -460,7 +496,7 @@ async function renderWorkspaceSources() {
   if (!sources.length) {
     const empty = document.createElement('p');
     empty.className = 'field-help';
-    empty.textContent = 'No Workspace Sources configured. URL rules work without an account or external service.';
+    empty.textContent = 'No optional connections are configured. Smart Groups and saved URL rules work without an account or external service.';
     workspaceSourcesElement.append(empty);
     return;
   }
@@ -479,11 +515,11 @@ async function renderWorkspaceSources() {
     title.textContent = source.name;
     const detail = document.createElement('small');
     const state = source.enabled
-      ? accessGranted ? 'Enabled' : 'Enabled, needs API access'
-      : 'Disabled';
-    detail.textContent = `${state} · ${source.precedence === 'before-rules' ? 'Source before URL rules' : 'URL rules before source'}`;
+      ? accessGranted ? 'On' : 'On, needs service access'
+      : 'Off';
+    detail.textContent = `${state} · ${source.precedence === 'before-rules' ? 'Checked before URL rules' : 'Checked after URL rules'}`;
     const origins = document.createElement('code');
-    origins.textContent = source.permissionOrigins.length ? source.permissionOrigins.join(', ') : 'No API origin required';
+    origins.textContent = source.permissionOrigins.length ? source.permissionOrigins.join(', ') : 'No service address required';
     copy.append(title, detail, origins);
 
     const controls = document.createElement('div');
@@ -491,18 +527,23 @@ async function renderWorkspaceSources() {
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.className = source.enabled && accessGranted ? 'secondary' : '';
-    toggle.textContent = source.enabled && !accessGranted ? 'Grant access' : source.enabled ? 'Disable' : 'Enable';
+    toggle.textContent = source.enabled && !accessGranted ? 'Review access' : source.enabled ? 'Turn off' : 'Turn on';
     toggle.addEventListener('click', async () => {
-      try {
-        const nextEnabled = source.enabled && accessGranted ? false : true;
-        await saveWorkspaceSourceState(source.id, nextEnabled);
-        workspaceSourceStatus.textContent = source.enabled && !accessGranted
-          ? `Granted API access for ${source.name}.`
-          : `${source.name} ${nextEnabled ? 'enabled' : 'disabled'}.`;
-        await renderWorkspaceSources();
-      } catch (error) {
-        workspaceSourceStatus.textContent = error.message;
+      const nextEnabled = source.enabled && accessGranted ? false : true;
+      if (nextEnabled && source.credentials.some((credential) => !String(secrets[source.id]?.[credential.id] || '').trim())) {
+        showWorkspaceSourceStatus(`Save the required credentials for ${source.name} before turning it on.`, 'error');
+        return;
       }
+      const disclosure = sourceAccessDisclosure(source, accessGranted);
+      if (nextEnabled && disclosure.required) {
+        openSourcePermissionDisclosure(source);
+        return;
+      }
+      await applyWorkspaceSourceState(
+        source,
+        nextEnabled,
+        `${source.name} is ${nextEnabled ? 'on' : 'off'}.`,
+      );
     });
     const edit = document.createElement('button');
     edit.type = 'button';
@@ -527,7 +568,7 @@ async function renderWorkspaceSources() {
         [WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]: nextSecrets,
       });
       await releaseUnusedSourceOrigins(source.permissionOrigins);
-      workspaceSourceStatus.textContent = `Removed ${source.name}.`;
+      showWorkspaceSourceStatus(`Removed ${source.name} and its locally saved credentials.`, 'success');
       await renderWorkspaceSources();
     });
     controls.append(toggle, edit, remove);
@@ -557,9 +598,13 @@ async function renderWorkspaceSources() {
         nextSecrets[source.id] = Object.fromEntries([...credentials.querySelectorAll('input')]
           .map((input) => [input.dataset.credentialId, input.value.trim()]));
         await chrome.storage.local.set({ [WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]: nextSecrets });
-        workspaceSourceStatus.textContent = `Saved ${source.name} credentials locally. They will not be exported.`;
+        showWorkspaceSourceStatus(`Saved ${source.name} credentials in Chrome on this device. They will not be exported.`, 'success');
       });
       credentials.append(saveCredentials);
+      const credentialHelp = document.createElement('small');
+      credentialHelp.className = 'credential-help';
+      credentialHelp.textContent = 'Credentials stay in Chrome extension storage and are sent only to this connection\'s listed service addresses.';
+      credentials.append(credentialHelp);
       row.append(credentials);
     }
     workspaceSourcesElement.append(row);
@@ -1098,17 +1143,47 @@ workspaceSourceForm.addEventListener('submit', async (event) => {
     await chrome.storage.local.set({
       [WORKSPACE_SOURCES_STORAGE_KEY]: [...sources.filter((candidate) => candidate.id !== source.id), source],
     });
-    workspaceSourceStatus.textContent = `Saved ${source.name} disabled. Review its origins and credentials before enabling it.`;
+    showWorkspaceSourceStatus(`Saved ${source.name} off. Review its service addresses and credentials before turning it on.`, 'success');
     workspaceSourceJson.value = '';
     await renderWorkspaceSources();
   } catch (error) {
-    workspaceSourceStatus.textContent = error instanceof Error ? error.message : 'That source JSON is invalid.';
+    showWorkspaceSourceStatus(error instanceof Error ? error.message : 'That connection JSON is invalid.', 'error');
   }
 });
 
 workspaceSourceClear.addEventListener('click', () => {
   workspaceSourceJson.value = '';
   workspaceSourceStatus.textContent = '';
+  workspaceSourceStatus.dataset.tone = 'info';
+});
+
+sourcePermissionCancel.addEventListener('click', () => {
+  pendingSourceAccess = null;
+  sourcePermissionDialog.close();
+  showWorkspaceSourceStatus('Connection access was not requested.');
+});
+
+sourcePermissionDialog.addEventListener('cancel', () => {
+  pendingSourceAccess = null;
+  showWorkspaceSourceStatus('Connection access was not requested.');
+});
+
+sourcePermissionContinue.addEventListener('click', async () => {
+  const source = pendingSourceAccess;
+  if (!source) {
+    sourcePermissionDialog.close();
+    return;
+  }
+  sourcePermissionContinue.disabled = true;
+  try {
+    const updated = await applyWorkspaceSourceState(source, true, `${source.name} is on and can use its approved service addresses.`);
+    if (updated) {
+      pendingSourceAccess = null;
+      sourcePermissionDialog.close();
+    }
+  } finally {
+    sourcePermissionContinue.disabled = false;
+  }
 });
 
 smartGroupForm.addEventListener('submit', async (event) => {
@@ -1181,7 +1256,7 @@ loadWindowAutomationPolicy().catch((error) => {
 });
 
 renderTrainedRules().catch(() => {
-  trainedRules.textContent = 'Learned links could not be loaded.';
+  trainedRules.textContent = 'Saved workspace rules could not be loaded. Reload this page and try again.';
 });
 
 renderSmartGroups().catch(() => {
@@ -1193,5 +1268,5 @@ renderManagedGroupOrder().catch(() => {
 });
 
 renderWorkspaceSources().catch(() => {
-  workspaceSourcesElement.textContent = 'Workspace Sources could not be loaded.';
+  workspaceSourcesElement.textContent = 'Optional connections could not be loaded. Reload this page and try again.';
 });

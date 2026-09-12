@@ -35,7 +35,11 @@ body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--text
 .eyebrow { margin: 0 0 8px; color: var(--accent); font-family: "Geist Mono", monospace; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 h1 { margin: 0; max-width: 560px; font-size: clamp(32px, 6vw, 48px); line-height: 1.08; letter-spacing: -.04em; }
 h2 { margin: 0 0 8px; font-size: 20px; line-height: 1.2; }
-.lede { max-width: 620px; margin: 16px 0 32px; color: var(--muted); }
+.lede { max-width: 620px; margin: 16px 0 18px; color: var(--muted); }
+.help-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 24px; font-size: 13px; }
+.privacy-note { padding: 16px; margin-bottom: 16px; border: 1px solid #526760; border-radius: 8px; background: #17211e; }
+.privacy-note strong, .privacy-note p { display: block; }
+.privacy-note p { margin: 5px 0 7px; color: var(--muted); font-size: 13px; }
 .card { padding: 24px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
 label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
 input[type="password"], input[type="text"], input[type="url"], select, textarea { width: 100%; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-raised); color: var(--text); font: inherit; }
@@ -44,6 +48,7 @@ textarea { min-height: 180px; padding-block: 12px; resize: vertical; font-family
 input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .field-help, .help, small { color: var(--muted); font-size: 13px; }
 .field-help { margin: 8px 0 24px; }
+.compact-help { margin: -2px 0 4px; }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .toggle-row strong, .toggle-row small { display: block; }
 .toggle-row strong { margin-bottom: 4px; }
@@ -77,6 +82,7 @@ button.secondary { border-color: var(--border-strong); background: transparent; 
 .backup-preview-actions button { min-height: 34px; padding: 0 10px; font-size: 13px; }
 .backup-preview pre { max-height: 360px; margin: 0; padding: 14px; overflow: auto; border-top: 1px solid var(--border); color: var(--muted); font: 12px/1.5 "Geist Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .status { min-height: 24px; margin: 16px 0 0; color: var(--accent); }
+.status[data-tone="error"] { color: var(--danger); }
 .rule-warning { min-height: 20px; margin: 7px 0 0; color: #f2c46f; font-size: 12px; }
 .guide { color: var(--muted); font-size: 14px; }
 .guide p:last-child { margin-bottom: 0; }
@@ -92,6 +98,7 @@ button.secondary { border-color: var(--border-strong); background: transparent; 
 .source-credentials { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; flex-basis: 100%; }
 .source-credentials label { min-width: 0; margin-bottom: 0; }
 .source-credentials button { height: 44px; }
+.credential-help { grid-column: 1 / -1; margin-top: -4px; }
 .client-rule-group { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); }
 .client-rule-group + .client-rule-group { margin-top: 8px; }
 .client-rule-group > summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px; cursor: pointer; list-style: none; }
@@ -152,6 +159,14 @@ button.secondary { border-color: var(--border-strong); background: transparent; 
 code { color: var(--text); font-family: "Geist Mono", monospace; font-size: .9em; }
 a { color: var(--link); }
 .help { margin-top: 24px; }
+dialog { width: min(520px, calc(100% - 32px)); padding: 22px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--text); box-shadow: 0 18px 50px rgb(0 0 0 / 45%); }
+dialog::backdrop { background: rgb(0 0 0 / 62%); }
+dialog h2 { margin-bottom: 10px; }
+.dialog-copy, .dialog-note { color: var(--muted); font-size: 14px; }
+.dialog-copy { margin: 0 0 12px; }
+.dialog-note { margin: 12px 0 0; }
+.permission-origins { padding: 12px 12px 12px 32px; margin: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); font: 12px/1.5 "Geist Mono", monospace; overflow-wrap: anywhere; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
 @media (max-width: 520px) {
   .shortcut-setting { grid-template-columns: 1fr auto; }

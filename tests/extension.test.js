@@ -9,7 +9,7 @@ test('declares a local-first Manifest V3 extension with optional network access'
   const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Tab Bundlr');
-  assert.equal(manifest.version, '0.8.1');
+  assert.equal(manifest.version, '0.8.2');
   assert.equal(packageJson.version, manifest.version);
   assert.deepEqual(manifest.permissions, ['storage', 'tabs', 'tabGroups']);
   assert.equal('host_permissions' in manifest, false);
@@ -34,15 +34,19 @@ test('ships the generic first-run, safety, source, review, and recovery surfaces
   const popup = await readFile(new URL('popup.html', root), 'utf8');
   const popupScript = await readFile(new URL('popup.js', root), 'utf8');
   const review = await readFile(new URL('review.html', root), 'utf8');
+  const help = await readFile(new URL('help.html', root), 'utf8');
+  const guidance = await readFile(new URL('guidance.js', root), 'utf8');
   const backup = await readFile(new URL('backup.js', root), 'utf8');
 
   assert.match(options, /Build predictable browser workspaces/);
   assert.match(options, /Automatic Tab Bundling/);
   assert.match(options, /home-base-duplicate-action/);
   assert.match(options, /Personal tab rules/);
-  assert.match(options, /Workspace Sources/);
+  assert.match(options, /Connections from JSON/);
   assert.match(options, /workspace-source-json/);
   assert.match(options, /credentials.*excluded/i);
+  assert.match(options, /Before you connect/);
+  assert.match(options, /See what is stored, sent, and deleted/);
   assert.match(optionsScript, /chrome\.permissions\.request/);
   assert.match(optionsScript, /enabled: false/);
   assert.match(optionsScript, /WORKSPACE_SOURCE_SECRETS_STORAGE_KEY/);
@@ -60,9 +64,17 @@ test('ships the generic first-run, safety, source, review, and recovery surfaces
   assert.match(popup, /Fix/);
   assert.match(popup, /Organize/);
   assert.match(popup, /Undo last move/);
+  assert.match(popup, /first-use-guide/);
+  assert.match(popup, /Dismiss first-use guidance/);
+  assert.match(popup, /Help/);
+  assert.match(popupScript, /FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY/);
+  assert.match(guidance, /workspaceSourceCount/);
   assert.match(popupScript, /Manual mode is on/);
   assert.match(review, /Same URL clusters/);
   assert.match(review, /Probably stale tabs/);
+  assert.match(help, /What leaves the device/);
+  assert.match(help, /How to delete it/);
+  assert.match(help, /Nothing leaves the device unless you enable an optional connection/);
 });
 
 test('does not ship private fixture names, private IDs, or credential values', async () => {
@@ -79,7 +91,10 @@ test('does not ship private fixture names, private IDs, or credential values', a
     'background.js',
     'backup.js',
     'settings.js',
+    'guidance.js',
     'sources.js',
+    'help.html',
+    'help.css',
     'scripts/package-extension.mjs',
     'docs/app-stylr-exceptions.md',
     'docs/installation.md',
@@ -95,6 +110,7 @@ test('does not ship private fixture names, private IDs, or credential values', a
     'tests/background-performance.test.js',
     'tests/core.test.js',
     'tests/settings.test.js',
+    'tests/guidance.test.js',
     'tests/sources.test.js',
   ];
   const source = (await Promise.all(files.map((file) => readFile(new URL(file, root), 'utf8')))).join('\n');

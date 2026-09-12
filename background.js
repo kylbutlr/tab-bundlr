@@ -2611,7 +2611,7 @@ async function teachActiveTabToWorkspace(groupId) {
   const pattern = trainingPatternForUrl(activeTab?.url);
   if (!activeTab || !record) return { ok: false, message: 'Choose an open saved workspace first.' };
   if (activeTab.pinned) return { ok: false, message: 'Pinned tabs stay independent of Tab Bundlr groups.' };
-  if (!pattern) return { ok: false, message: 'This tab cannot be learned as a workspace link.' };
+  if (!pattern) return { ok: false, message: 'A URL rule cannot be saved for this type of tab.' };
   if (!managedGroupTypeIsEnabled(enabledTypes, 'client')) {
     return { ok: false, message: 'Saved workspaces are disabled in Workspace settings.' };
   }
@@ -2656,7 +2656,7 @@ async function teachActiveTabToWorkspace(groupId) {
     windowId,
     source: 'learned',
   }), 'learned-rule');
-  return { ok: true, message: `Learned ${pattern} for ${record.epicName}.` };
+  return { ok: true, message: `Saved ${pattern} for ${record.epicName}.` };
 }
 
 async function addClientRuleForActiveTab(groupId, value, epicNameValue, epicIdValue, requestedWindowId = null) {
@@ -2943,7 +2943,7 @@ async function statusForPopup(requestedWindowId) {
           : assignment?.type === 'smart'
             ? `Smart: ${assignment.rule.name}`
             : assignment?.type === 'learned'
-              ? `Taught: ${assignment.rule.epicName}`
+              ? `Saved: ${assignment.rule.epicName}`
               : ignoredBrowserPage ? 'Browser page'
               : automaticSource ? 'Automatic' : 'Not set';
         return {

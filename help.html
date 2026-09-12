@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tab Bundlr help and privacy</title>
+    <link rel="stylesheet" href="help.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Tab Bundlr</p>
+        <h1>Help and privacy</h1>
+        <p class="lede">Understand what each action does and how Tab Bundlr handles browser information.</p>
+      </div>
+      <a class="button-link" href="options.html">Open Settings</a>
+    </header>
+    <nav class="section-nav" aria-label="Help sections">
+      <a href="#first-use">First use</a>
+      <a href="#actions">Actions</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#connections">Connections</a>
+      <a href="#support">Support</a>
+    </nav>
+
+    <main id="main">
+      <section id="first-use" class="content-section" aria-labelledby="first-use-title">
+        <p class="eyebrow">First use</p>
+        <h2 id="first-use-title">Start with one rule</h2>
+        <ol class="steps">
+          <li><strong>Create a Smart Group.</strong> In Settings, give it a name and an HTTP or HTTPS URL prefix.</li>
+          <li><strong>Open matching pages.</strong> A prefix matches itself and deeper paths. The most specific matching prefix wins.</li>
+          <li><strong>Use Fix.</strong> Tab Bundlr applies your rules while protecting pinned tabs and groups you created manually in Chrome.</li>
+          <li><strong>Review the result.</strong> Undo the latest Tab Bundlr move if needed. Turn on Automatic Tab Bundling only when you want rules applied as tabs open or navigate.</li>
+        </ol>
+      </section>
+
+      <section id="actions" class="content-section" aria-labelledby="actions-title">
+        <p class="eyebrow">Actions</p>
+        <h2 id="actions-title">What the controls do</h2>
+        <dl class="action-list">
+          <div><dt>Fix</dt><dd>Applies known URL rules to recognized tabs in the current window. It does not move pinned tabs or tabs in manual Chrome groups.</dd></div>
+          <div><dt>Organize</dt><dd>Reorders Tab Bundlr-managed groups. It does not close tabs or change manual groups.</dd></div>
+          <div><dt>Focus</dt><dd>Expands one workspace, collapses other managed groups, and activates a tab in the chosen workspace.</dd></div>
+          <div><dt>Move here</dt><dd>Moves the active tab once. It does not save a URL rule.</dd></div>
+          <div><dt>Save URL rule</dt><dd>Saves a URL prefix so matching pages can return to the same workspace.</dd></div>
+          <div><dt>Keep as home base</dt><dd>Remembers one exact web address and restores an inactive copy when its last copy disappears or navigates away.</dd></div>
+          <div><dt>Pause this window</dt><dd>Stops Tab Bundlr from sorting that window for the current Chrome session.</dd></div>
+          <div><dt>Review tabs</dt><dd>Shows unassigned, duplicate, and probably stale tabs. Closing tabs always requires a separate selection and confirmation.</dd></div>
+        </dl>
+      </section>
+
+      <section id="privacy" class="content-section" aria-labelledby="privacy-title">
+        <p class="eyebrow">Privacy</p>
+        <h2 id="privacy-title">Local by default</h2>
+        <p>Tab Bundlr has no hosted account, backend, telemetry, advertising, analytics, or cloud synchronization. It does not inject scripts into pages or read page bodies, form contents, cookies, or passwords.</p>
+        <div class="privacy-grid">
+          <article>
+            <h3>What it reads</h3>
+            <p>Open-tab titles, URLs, activity time, pinned state, window placement, and Chrome group membership. This is used to match rules, show review information, organize tabs, and protect active or pinned tabs.</p>
+          </article>
+          <article>
+            <h3>What it stores</h3>
+            <p>Rules, preferences, optional connection definitions and credentials, home-base URLs, managed-group records, and recent move history in Chrome extension storage. Paused windows, temporary focus holds, and tab activation history are session state.</p>
+          </article>
+          <article>
+            <h3>What leaves the device</h3>
+            <p>Nothing leaves the device unless you enable an optional connection. A connection may send a read-only HTTPS request to its listed service addresses, including configured credential headers and values matched from a supported page URL.</p>
+          </article>
+          <article>
+            <h3>How to delete it</h3>
+            <p>Remove individual rules and connections in Settings. Removing a connection also removes its saved credentials. Remove Tab Bundlr through <code>chrome://extensions</code> to delete its extension storage.</p>
+          </article>
+        </div>
+        <p class="policy-link">The public policy is also available in the <a href="https://github.com/kylbutlr/tab-bundlr/blob/main/docs/privacy.md">Tab Bundlr source repository</a>.</p>
+      </section>
+
+      <section id="connections" class="content-section" aria-labelledby="connections-title">
+        <p class="eyebrow">Optional connections</p>
+        <h2 id="connections-title">You approve every service address</h2>
+        <p>Connections are visible JSON configurations. They can recognize supported page URLs, make HTTPS <code>GET</code> requests to listed addresses, and use selected response fields to choose a workspace. They cannot send request bodies, make write requests, run scripts, or follow redirects.</p>
+        <p>Newly imported connections stay off. Before first access, Tab Bundlr shows the requested addresses and Chrome asks you to approve them. Credentials are stored separately from the JSON, excluded from settings exports, and sent only as the headers declared by that connection.</p>
+      </section>
+
+      <section id="support" class="content-section" aria-labelledby="support-title">
+        <p class="eyebrow">Support</p>
+        <h2 id="support-title">Report an issue safely</h2>
+        <p>Include your Chrome and Tab Bundlr versions, the action you tried, and what happened. Do not include API tokens, authorization headers, private URLs, exported browser data, or confidential workspace information.</p>
+        <a class="button-link secondary" href="https://github.com/kylbutlr/tab-bundlr/issues">Open the public issue tracker</a>
+      </section>
+    </main>
+  </body>
+</html>

@@ -2,9 +2,9 @@
 
 ## Automated
 
-- [x] `npm test` passes, 73 tests on September 10, 2026.
+- [x] `npm test` passes, 78 tests on September 11, 2026.
 - [x] `npm run package` creates a valid ZIP.
-- [x] The ZIP contains only the 23 entries in the explicit public allowlist.
+- [x] The ZIP contains only the 26 entries in the explicit public allowlist.
 - [x] The ZIP scan contains no private fixture names, IDs, tokens, or legacy secret exports.
 
 ## Fresh installation
@@ -13,6 +13,14 @@
 - [x] Automatic Tab Bundling is off.
 - [x] No account, token, or Workspace Source is required.
 - [x] A neutral Smart Group can be created, fixed, organized, and undone.
+
+## First-use guidance
+
+- [x] The popup callout appears only when no Smart Group, Focus Group, saved workspace rule, or optional connection exists.
+- [x] Dismissing the callout stores a separate local preference and does not change grouping settings.
+- [x] Help and privacy remain available after dismissal.
+- [x] Connection access is explained before Chrome displays its permission prompt.
+- [ ] Repeat the full first-use browser walkthrough with the v0.8.2 package in a disposable Chrome profile.
 
 ## Core behavior
 
