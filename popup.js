@@ -1,4 +1,8 @@
 import { contextRuleActionAvailability, trainingPatternForUrl } from './core.js';
+import {
+  FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY,
+  shouldShowFirstUseGuidance,
+} from './guidance.js';
 
 const statePill = document.getElementById('state-pill');
 const status = document.getElementById('status');
@@ -8,8 +12,13 @@ const groups = document.getElementById('groups');
 const reviewTabsPage = document.getElementById('review-tabs-page');
 const undo = document.getElementById('undo');
 const settings = document.getElementById('settings');
+const help = document.getElementById('help');
 const fixWindow = document.getElementById('fix-window');
 const organizeWindow = document.getElementById('organize-window');
+const firstUseGuide = document.getElementById('first-use-guide');
+const dismissFirstUseGuide = document.getElementById('dismiss-first-use-guide');
+const openFirstUseSettings = document.getElementById('open-first-use-settings');
+const openFirstUseHelp = document.getElementById('open-first-use-help');
 const smartGroupDialog = document.getElementById('smart-group-dialog');
 const smartGroupDialogForm = document.getElementById('smart-group-dialog-form');
 const smartGroupDialogTitle = document.getElementById('smart-group-dialog-title');
@@ -39,6 +48,16 @@ function button(label, className, onClick) {
   control.textContent = label;
   control.addEventListener('click', onClick);
   return control;
+}
+
+function showStatus(message, tone = 'info') {
+  status.textContent = message;
+  status.dataset.tone = tone;
+}
+
+async function openHelpPage(anchor = '') {
+  await chrome.tabs.create({ url: chrome.runtime.getURL(`help.html${anchor}`) });
+  window.close();
 }
 
 function overlapWarning(overlaps) {
@@ -149,11 +168,11 @@ function sourceLabel(source) {
   if (source === 'focus' || source === 'focus-opener') return 'Focus Group';
   if (source === 'opener') return 'Inherited';
   if (source === 'manual') return 'Added by you';
-  if (source === 'story') return 'Story';
-  if (source === 'epic') return 'Epic';
-  if (source === 'iteration') return 'Iteration';
-  if (String(source || '').startsWith('workspace-source:')) return 'Workspace Source';
-  if (source === 'learned') return 'Learned';
+  if (source === 'story') return 'Work item';
+  if (source === 'epic') return 'Workspace';
+  if (source === 'iteration') return 'Collection';
+  if (String(source || '').startsWith('workspace-source:')) return 'Connection';
+  if (source === 'learned') return 'Saved rule';
   if (source === 'smart') return 'Smart Group';
   return 'Unknown';
 }
@@ -225,11 +244,11 @@ function groupRow(group, response) {
       || activeSmartAssignment
       ? null
       : isCoveredByThisGroup
-        ? button('Covered', 'small-button covered-button', () => {})
-        : button(activeIsAutomaticSource ? 'Automatic' : (response.activeAssignment ? 'Reassign link' : 'Remember link'), 'small-button secondary', async () => {
+        ? button('Matched', 'small-button covered-button', () => {})
+        : button(activeIsAutomaticSource ? 'Automatic' : (response.activeAssignment ? 'Move saved rule' : 'Save URL rule'), 'small-button secondary', async () => {
           const result = await chrome.runtime.sendMessage({ type: 'TEACH_ACTIVE_TAB', groupId: group.id });
-          status.textContent = result?.message || 'Learned link updated.';
-          await refresh();
+          showStatus(result?.message || 'Saved URL rule updated.', result?.ok === false ? 'error' : 'success');
+          await refresh({ preserveStatus: true });
         });
     if (teachButton) {
       teachButton.disabled = response.windowPaused || isCoveredByThisGroup || activeIsAutomaticSource || !response.activeTab;
@@ -238,21 +257,21 @@ function groupRow(group, response) {
         : isCoveredByThisGroup
         ? `The active tab is already covered by ${group.epicName}.`
         : activeIsAutomaticSource
-          ? 'This page is assigned automatically by a Workspace Source.'
+          ? 'This page is assigned automatically by an optional connection.'
           : response.activeAssignment
-            ? 'Move the existing learned URL rule to this workspace.'
-            : 'Remember this URL pattern for the selected workspace and move the current tab.';
+            ? 'Move the existing saved URL rule to this workspace.'
+            : 'Save this URL prefix for the selected workspace and move the current tab.';
     }
     const focusButton = button('Focus', 'small-button', async () => {
         const result = await chrome.runtime.sendMessage({ type: 'FOCUS_WORKSPACE', groupId: group.id });
-        status.textContent = result?.message || 'Workspace focused.';
-        await refresh();
+        showStatus(result?.message || 'Workspace focused.', result?.ok === false ? 'error' : 'success');
+        await refresh({ preserveStatus: true });
       });
     focusButton.title = 'Expand this workspace, collapse other managed groups, and activate one tab.';
     const moveHere = button('Move here', 'small-button secondary', async () => {
         const result = await chrome.runtime.sendMessage({ type: 'ADD_ACTIVE_TAB', groupId: group.id });
-        status.textContent = result?.message || 'Active tab updated.';
-        await refresh();
+        showStatus(result?.message || 'Active tab updated.', result?.ok === false ? 'error' : 'success');
+        await refresh({ preserveStatus: true });
       });
     moveHere.disabled = response.windowPaused;
     moveHere.title = response.windowPaused
@@ -313,8 +332,8 @@ function renderCurrentWorkspace(response) {
           windowId: response.windowId,
           paused: false,
         });
-        status.textContent = result?.message || 'Window resumed.';
-        await refresh();
+        showStatus(result?.message || 'Window resumed.', result?.ok === false ? 'error' : 'success');
+        await refresh({ preserveStatus: true });
       }));
     currentWorkspace.append(actions);
     return;
@@ -326,7 +345,7 @@ function renderCurrentWorkspace(response) {
     || (response.activeAssignment
       ? `Covered by ${response.activeAssignment.epicName}`
       : response.activeCoverage?.state === 'not-covered'
-        ? 'Not covered by Teach'
+        ? 'No matching rule'
         : response.activeCoverage?.state === 'ignored'
           ? response.activeTab?.title || 'Browser page'
           : 'Unassigned tab');
@@ -340,7 +359,7 @@ function renderCurrentWorkspace(response) {
     : response.activeCoverage?.type === 'smart'
       ? 'smart'
       : response.activeCoverage?.type === 'learned'
-        ? 'learned'
+        ? 'saved'
         : response.activeCoverage?.state === 'automatic' ? 'automatic' : 'unknown';
   coverageBadge.className = `coverage-badge coverage-${coverageType}`;
   coverageBadge.textContent = coverageType === 'not-set'
@@ -351,8 +370,8 @@ function renderCurrentWorkspace(response) {
       ? 'Focus Group'
     : coverageType === 'smart'
       ? 'Smart Group'
-      : coverageType === 'learned'
-        ? 'Taught'
+      : coverageType === 'saved'
+        ? 'Saved rule'
         : coverageType === 'automatic' ? 'Automatic' : 'Review';
   const homeBaseBadge = document.createElement('span');
   homeBaseBadge.className = 'coverage-badge coverage-home-base';
@@ -360,19 +379,19 @@ function renderCurrentWorkspace(response) {
   const detail = document.createElement('small');
   const assignmentMatchesWorkspace = response.currentWorkspace
     && response.activeAssignment?.epicId === response.currentWorkspace.epicId;
-  const assignmentSource = response.activeAssignment?.type === 'smart' ? 'Smart Group' : 'learned rule';
-  const coverageLabel = response.activeAssignment?.type === 'smart' ? 'covered by Smart Group' : 'covered by learned rule';
+  const assignmentSource = response.activeAssignment?.type === 'smart' ? 'Smart Group' : 'saved URL rule';
+  const coverageLabel = response.activeAssignment?.type === 'smart' ? 'covered by Smart Group' : 'covered by saved URL rule';
   detail.textContent = response.currentWorkspace
     ? response.currentWorkspace.isFocusGroup
       ? `${response.activeTab?.roleLabel || 'Tab'} · ${response.activeTab?.title || 'Active tab'} · held here until you drag it out`
-      : `${response.activeTab?.roleLabel || 'Tab'} · ${response.activeTab?.title || 'Active tab'}${assignmentMatchesWorkspace ? ` · ${coverageLabel}` : response.activeAssignment ? ` · learned for ${response.activeAssignment.epicName}` : ''}`
+      : `${response.activeTab?.roleLabel || 'Tab'} · ${response.activeTab?.title || 'Active tab'}${assignmentMatchesWorkspace ? ` · ${coverageLabel}` : response.activeAssignment ? ` · saved for ${response.activeAssignment.epicName}` : ''}`
       : response.activeAssignment
       ? `${response.activeAssignment.roleLabel} · ${response.activeTab?.title || 'Active tab'} · ${assignmentSource}`
       : response.activeCoverage?.state === 'ignored'
         ? `${response.activeTab?.roleLabel || 'Browser'} · ignored by Tab Bundlr`
       : response.activeCoverage?.state === 'automatic'
         ? `${response.activeTab?.roleLabel} · ${response.activeTab.title} · grouped automatically`
-        : response.activeTab ? `${response.activeTab.roleLabel} · ${response.activeTab.title} · choose Teach this tab to assign it` : 'Select a managed group below to focus a workspace.';
+        : response.activeTab ? `${response.activeTab.roleLabel} · ${response.activeTab.title} · add a URL rule to assign it` : 'Select a workspace below to focus it.';
   copy.append(title, coverageBadge);
   if (response.activeHomeBaseUrl) copy.append(homeBaseBadge);
   copy.append(detail);
@@ -398,8 +417,8 @@ function renderCurrentWorkspace(response) {
           windowId: response.windowId,
           enabled: !response.activeHomeBaseUrl,
         });
-        status.textContent = result?.message || 'Home-base preference updated.';
-        await refresh();
+        showStatus(result?.message || 'Home-base preference updated.', result?.ok === false ? 'error' : 'success');
+        await refresh({ preserveStatus: true });
       },
     ));
   }
@@ -409,8 +428,8 @@ function renderCurrentWorkspace(response) {
       windowId: response.windowId,
       paused: true,
     });
-    status.textContent = result?.message || 'Window paused.';
-    await refresh();
+    showStatus(result?.message || 'Window paused.', result?.ok === false ? 'error' : 'success');
+    await refresh({ preserveStatus: true });
   }));
   currentWorkspace.append(actions);
 }
@@ -426,14 +445,14 @@ function renderReviewTabs(response) {
   disclosure.className = 'review-section';
   const summary = document.createElement('summary');
   const label = document.createElement('strong');
-  label.textContent = 'Needs setup';
+  label.textContent = 'Unassigned tabs';
   const count = document.createElement('small');
   count.textContent = `${response.reviewTabs.length} ungrouped tab${response.reviewTabs.length === 1 ? '' : 's'}`;
   summary.append(label, count);
   disclosure.append(summary);
   const help = document.createElement('p');
   help.className = 'review-help';
-  help.textContent = 'HTTP and HTTPS tabs with no URL rule, Workspace Source, or known opener association. Chrome pages and protected groups are omitted.';
+  help.textContent = 'These web tabs do not match a saved rule yet. Open Review tabs to assign one. Pinned tabs and manual groups stay out of this list.';
   disclosure.append(help);
   const list = document.createElement('div');
   list.className = 'review-list';
@@ -442,7 +461,7 @@ function renderReviewTabs(response) {
   reviewTabs.append(disclosure);
 }
 
-async function refresh() {
+async function refresh({ preserveStatus = false } = {}) {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.runtime.sendMessage({ type: 'GET_STATUS', windowId: activeTab?.windowId });
   if (!response?.ok) throw new Error(response?.error || 'Could not read Tab Bundlr status.');
@@ -451,18 +470,33 @@ async function refresh() {
     ? 'Window excluded'
     : response.windowPaused ? 'Window paused' : response.enabled ? 'Automatic' : 'Manual';
   statePill.className = `pill ${automaticActive ? 'pill-on' : 'pill-off'}`;
-  if (response.windowPauseReason === 'not-selected') status.textContent = 'This window is not selected for Tab Bundlr automation.';
-  else if (response.windowPaused) status.textContent = 'This window is excluded from automatic grouping for the current Chrome session.';
-  else status.textContent = response.enabled
-    ? `${response.focusGroupCount || 0} Focus Group${response.focusGroupCount === 1 ? '' : 's'} · ${response.smartGroupCount || 0} Smart Group${response.smartGroupCount === 1 ? '' : 's'} · ${response.trainedRuleCount || 0} learned link${response.trainedRuleCount === 1 ? '' : 's'}.`
-    : 'Manual mode is on. Fix and Organize remain available.';
+  if (!preserveStatus) {
+    if (response.windowPauseReason === 'not-selected') showStatus('This window is not selected for Tab Bundlr automation.');
+    else if (response.windowPaused) showStatus('This window is excluded from automatic grouping for the current Chrome session.');
+    else showStatus(response.enabled
+      ? `${response.focusGroupCount || 0} Focus Group${response.focusGroupCount === 1 ? '' : 's'} · ${response.smartGroupCount || 0} Smart Group${response.smartGroupCount === 1 ? '' : 's'} · ${response.trainedRuleCount || 0} saved link${response.trainedRuleCount === 1 ? '' : 's'}.`
+      : 'Manual mode is on. Fix and Organize remain available.');
+  }
+  const storedGuidance = await chrome.storage.local.get(FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY);
+  const showGuide = shouldShowFirstUseGuidance(
+    storedGuidance[FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY],
+    response,
+  );
+  firstUseGuide.hidden = !showGuide;
+  if (showGuide) {
+    fixWindow.setAttribute('aria-describedby', 'first-use-guide-copy');
+    organizeWindow.setAttribute('aria-describedby', 'first-use-guide-copy');
+  } else {
+    fixWindow.removeAttribute('aria-describedby');
+    organizeWindow.removeAttribute('aria-describedby');
+  }
   renderCurrentWorkspace(response);
   renderReviewTabs(response);
   groups.replaceChildren();
   if (!response.groups.length) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = 'No groups are open in this window.';
+    empty.textContent = 'No workspaces are open. Create a Smart Group in Settings, open a matching page, then use Fix.';
     groups.append(empty);
   } else {
     const managed = response.groups.filter((group) => group.managed);
@@ -493,11 +527,21 @@ async function refresh() {
 undo.addEventListener('click', async () => {
   undo.disabled = true;
   const response = await chrome.runtime.sendMessage({ type: 'UNDO_LAST_ACTION' });
-  status.textContent = response?.message || 'Undo finished.';
-  await refresh();
+  showStatus(response?.message || 'Undo finished.', response?.ok === false ? 'error' : 'success');
+  await refresh({ preserveStatus: true });
 });
 
 settings.addEventListener('click', () => chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' }));
+help.addEventListener('click', () => openHelpPage());
+openFirstUseSettings.addEventListener('click', () => chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' }));
+openFirstUseHelp.addEventListener('click', () => openHelpPage('#first-use'));
+dismissFirstUseGuide.addEventListener('click', async () => {
+  await chrome.storage.local.set({ [FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY]: true });
+  firstUseGuide.hidden = true;
+  fixWindow.removeAttribute('aria-describedby');
+  organizeWindow.removeAttribute('aria-describedby');
+  showStatus('First-use guidance dismissed. Open Help whenever you want to see it again.');
+});
 
 reviewTabsPage.addEventListener('click', async () => {
   await chrome.tabs.create({ url: chrome.runtime.getURL('review.html') });
@@ -506,18 +550,27 @@ reviewTabsPage.addEventListener('click', async () => {
 
 fixWindow.addEventListener('click', async () => {
   fixWindow.disabled = true;
-  const response = await chrome.runtime.sendMessage({ type: 'FIX_WINDOW' });
-  status.textContent = response?.message || 'Fix finished.';
-  await refresh();
+  try {
+    showStatus('Applying your URL rules…');
+    const response = await chrome.runtime.sendMessage({ type: 'FIX_WINDOW' });
+    showStatus(response?.message || 'Fix finished.', response?.ok === false ? 'error' : 'success');
+    await refresh({ preserveStatus: true });
+  } catch (error) {
+    showStatus(error?.message || 'Fix could not be completed. Review your open workspaces before trying again.', 'error');
+  } finally {
+    fixWindow.disabled = false;
+  }
 });
 
 organizeWindow.addEventListener('click', async () => {
   organizeWindow.disabled = true;
   try {
+    showStatus('Reordering Tab Bundlr workspaces…');
     const response = await chrome.runtime.sendMessage({ type: 'ORGANIZE_WINDOW' });
-    status.textContent = response?.message || 'Organization finished.';
+    showStatus(response?.message || 'Organization finished.', response?.ok === false ? 'error' : 'success');
+    await refresh({ preserveStatus: true });
   } catch (error) {
-    status.textContent = error?.message || 'Organization could not be completed.';
+    showStatus(error?.message || 'Organization could not be completed. No tabs were closed.', 'error');
   } finally {
     organizeWindow.disabled = false;
   }
@@ -564,8 +617,8 @@ smartGroupDialogForm.addEventListener('submit', async (event) => {
     return;
   }
   smartGroupDialog.close();
-  status.textContent = response.message || 'Smart Group URL saved.';
-  await refresh();
+  showStatus(response.message || 'Smart Group URL saved.', 'success');
+  await refresh({ preserveStatus: true });
 });
 
 clientRuleDialogForm.addEventListener('submit', async (event) => {
@@ -584,12 +637,12 @@ clientRuleDialogForm.addEventListener('submit', async (event) => {
     return;
   }
   clientRuleDialog.close();
-  status.textContent = response.message || 'Workspace rule saved.';
-  await refresh();
+  showStatus(response.message || 'Workspace rule saved.', 'success');
+  await refresh({ preserveStatus: true });
 });
 
 refresh().catch((error) => {
   statePill.textContent = 'Unavailable';
   statePill.className = 'pill pill-off';
-  status.textContent = error.message;
+  showStatus(error.message || 'Tab Bundlr could not read this window. Reload the extension and try again.', 'error');
 });

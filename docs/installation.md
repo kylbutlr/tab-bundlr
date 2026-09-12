@@ -9,6 +9,7 @@
 5. Choose the directory containing `manifest.json`.
 6. Pin Tab Bundlr from Chrome's Extensions menu.
 7. Open **Extension options** from the Tab Bundlr details page or popup.
+8. Use **Help** in the popup whenever you want to reopen the first-use and privacy guidance.
 
 No account or API credential is required.
 

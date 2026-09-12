@@ -14,7 +14,10 @@
           <h1>Review tabs</h1>
           <p class="lede">Assign unrecognized tabs, review duplicate URLs, inspect possible stale tabs, and undo recent moves.</p>
         </div>
-        <button id="refresh-review" class="secondary" type="button">Refresh</button>
+        <div class="review-header-actions">
+          <a href="help.html#actions">Help</a>
+          <button id="refresh-review" class="secondary" type="button">Refresh</button>
+        </div>
       </header>
 
       <section class="review-summary card" aria-live="polite">
@@ -30,7 +33,7 @@
           </div>
           <span id="unassigned-count" class="count-pill">0</span>
         </div>
-        <p class="field-help">These tabs have no Workspace Source assignment, Smart Group prefix, saved workspace rule, or known opener relationship. Tabs in manual Chrome groups and pinned tabs stay out of this inbox.</p>
+        <p class="field-help">These web tabs do not match a saved rule yet. Assign a tab once, or save a URL prefix for future matching. Pinned tabs and tabs in manual Chrome groups stay out of this inbox.</p>
         <div id="unassigned-list" class="review-list" aria-live="polite"></div>
       </section>
 
@@ -42,7 +45,7 @@
           </div>
           <span id="duplicate-count" class="count-pill">0</span>
         </div>
-        <p class="field-help">Fragments and trailing slashes are ignored. Query strings are preserved because they can represent meaningful page state.</p>
+        <p class="field-help">Choose which tab to keep, then confirm Close extras. Tab Bundlr ignores fragments and trailing slashes when comparing URLs, but keeps query strings because they can represent different page states.</p>
         <div id="duplicate-list" class="review-list" aria-live="polite"></div>
       </section>
 
@@ -77,7 +80,7 @@
             </select>
           </label>
         </div>
-        <p class="field-help">Suggestions use last accessed time. Active and pinned tabs are protected and cannot be selected for closing.</p>
+        <p class="field-help">Suggestions use Chrome's last-accessed time. Nothing is selected automatically. Active and pinned tabs are protected and cannot be selected for closing.</p>
         <div class="review-toolbar">
           <span id="stale-count" class="count-pill">0</span>
           <button id="close-selected-stale" class="secondary" type="button" disabled>Close selected</button>
@@ -87,10 +90,10 @@
 
       <p id="review-status" class="status" role="status" aria-live="polite"></p>
     </main>
-    <dialog id="assign-dialog">
+    <dialog id="assign-dialog" aria-labelledby="assign-dialog-title" aria-describedby="assign-tab-title">
       <form id="assign-form" method="dialog">
         <p class="eyebrow">Unassigned inbox</p>
-        <h2>Assign tab</h2>
+        <h2 id="assign-dialog-title">Assign tab</h2>
         <p id="assign-tab-title" class="dialog-tab-title"></p>
         <label for="assign-destination">Destination</label>
         <select id="assign-destination" required></select>

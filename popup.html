@@ -11,17 +11,31 @@
       <header class="popup-header">
         <div>
           <p class="eyebrow">Tab Bundlr</p>
-          <h1>Managed groups</h1>
+          <h1>Workspaces</h1>
         </div>
         <div class="header-actions">
           <div class="header-action-buttons">
-            <button id="fix-window" class="header-button" type="button" title="Regroup recognized tabs, skipping tabs in manual Chrome groups">Fix</button>
-            <button id="organize-window" class="header-button" type="button" title="Order Tab Bundlr-managed groups, leaving pinned tabs and manual groups untouched">Organize</button>
+            <button id="fix-window" class="header-button" type="button" title="Apply your URL rules to recognized tabs. Pinned tabs and manual groups stay put.">Fix</button>
+            <button id="organize-window" class="header-button" type="button" title="Reorder Tab Bundlr workspaces. This does not close tabs or change manual groups.">Organize</button>
           </div>
           <span id="state-pill" class="pill">Loading</span>
         </div>
       </header>
       <p id="status" class="status" role="status" aria-live="polite"></p>
+      <section id="first-use-guide" class="first-use-guide" aria-labelledby="first-use-guide-title" hidden>
+        <div class="first-use-guide-heading">
+          <div>
+            <p class="eyebrow">Start here</p>
+            <h2 id="first-use-guide-title">Create your first Smart Group</h2>
+          </div>
+          <button id="dismiss-first-use-guide" class="guide-dismiss" type="button" aria-label="Dismiss first-use guidance">Dismiss</button>
+        </div>
+        <p id="first-use-guide-copy">Add a name and URL prefix in Settings. Then open matching pages and use <strong>Fix</strong> to apply the rule. You can undo the latest move, and automatic bundling stays off until you enable it.</p>
+        <div class="first-use-guide-actions">
+          <button id="open-first-use-settings" type="button">Open Settings</button>
+          <button id="open-first-use-help" class="secondary" type="button">Learn more</button>
+        </div>
+      </section>
       <section id="current-workspace" class="current-workspace" aria-live="polite"></section>
       <section id="review-tabs" aria-live="polite"></section>
       <section id="groups" class="groups" aria-live="polite"></section>
@@ -29,9 +43,10 @@
         <button id="review-tabs-page" class="secondary" type="button">Review tabs</button>
         <button id="undo" class="secondary" type="button">Undo last move</button>
         <button id="settings" class="link-button" type="button">Settings</button>
+        <button id="help" class="link-button" type="button">Help</button>
       </div>
     </main>
-    <dialog id="smart-group-dialog">
+    <dialog id="smart-group-dialog" aria-labelledby="smart-group-dialog-title" aria-describedby="smart-group-dialog-help">
       <form id="smart-group-dialog-form" method="dialog">
         <p class="eyebrow">Smart groups</p>
         <h2 id="smart-group-dialog-title">Add URL to a Smart Group</h2>
@@ -43,7 +58,7 @@
         </div>
         <label for="smart-group-dialog-pattern">URL prefix</label>
         <input id="smart-group-dialog-pattern" type="url" required>
-        <p class="dialog-help">Edit this prefix before saving. A trailing hyphen can match names that continue after it.</p>
+        <p id="smart-group-dialog-help" class="dialog-help">Edit this prefix before saving. A trailing hyphen can match names that continue after it.</p>
         <p id="smart-group-dialog-overlap" class="dialog-warning" role="status" aria-live="polite"></p>
         <p id="smart-group-dialog-status" class="dialog-status" role="status" aria-live="polite"></p>
         <div class="dialog-actions">
@@ -52,7 +67,7 @@
         </div>
       </form>
     </dialog>
-    <dialog id="client-rule-dialog">
+    <dialog id="client-rule-dialog" aria-labelledby="client-rule-dialog-title" aria-describedby="client-rule-dialog-help">
       <form id="client-rule-dialog-form" method="dialog">
         <p class="eyebrow">Saved destinations</p>
         <h2 id="client-rule-dialog-title">Add workspace rule</h2>
@@ -66,7 +81,7 @@
         </div>
         <label for="client-rule-dialog-pattern">URL prefix</label>
         <input id="client-rule-dialog-pattern" type="url" required>
-        <p class="dialog-help">Use a more specific prefix when this page should override a broader Smart Group.</p>
+        <p id="client-rule-dialog-help" class="dialog-help">Use a more specific prefix when this page should override a broader Smart Group.</p>
         <p id="client-rule-dialog-overlap" class="dialog-warning" role="status" aria-live="polite"></p>
         <p id="client-rule-dialog-status" class="dialog-status" role="status" aria-live="polite"></p>
         <div class="dialog-actions">

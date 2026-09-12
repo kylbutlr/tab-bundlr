@@ -4,7 +4,7 @@ Tab Bundlr is local-first. It has no Tab Bundlr account, hosted backend, cloud s
 
 ## Data stored locally
 
-Chrome extension-local storage may contain workspace rules, Workspace Source definitions, Workspace Source credentials, group records, behavior preferences, home-base URLs, and recent move history. Session storage may contain paused window IDs, temporary focus holds, home-base anchors, and tab activation history.
+Chrome extension-local storage may contain workspace rules, Workspace Source definitions, Workspace Source credentials, group records, behavior preferences, home-base URLs, recent move history, and whether first-use guidance was dismissed. Session storage may contain paused window IDs, temporary focus holds, home-base anchors, and tab activation history.
 
 ## External requests
 
@@ -25,3 +25,7 @@ The `tabs` permission allows Tab Bundlr to read tab URLs and titles so it can ma
 ## Deletion
 
 Remove individual rules and sources from Settings, or remove the extension through `chrome://extensions` to delete its local extension storage. Removing a Workspace Source also removes its locally stored credentials.
+
+## In-product explanation
+
+Open **Help** from the popup or use the **Privacy** link in Settings to see the same data flow beside the controls that use it. Before an optional connection first requests service access, Tab Bundlr shows the exact HTTPS addresses and explains how its saved credential will be used.

@@ -14,7 +14,7 @@ Tab Bundlr turns open browser tabs into predictable, user-controlled workspaces.
 
 Create named Smart Groups with explicit URL prefixes, organize matching tabs on demand, and optionally enable Automatic Tab Bundling. Protect pinned tabs and manual Chrome groups, pause individual windows, focus one workspace, keep important home-base tabs available, review duplicates and stale tabs, and undo recent moves.
 
-Tab Bundlr works without an account or external service. Advanced users can add visible JSON Workspace Sources that read metadata from approved HTTPS APIs using GET requests only. Each source is disabled until reviewed and enabled.
+Tab Bundlr works without an account or external service. Advanced users can add visible JSON connections that read workspace metadata from approved HTTPS services using GET requests only. Each connection stays off until it is reviewed and enabled.
 
 Settings stay in Chrome extension storage. Tab Bundlr has no hosted account, cloud sync, analytics, advertising, or AI categorization. Normal backups exclude credentials.
 
@@ -30,7 +30,7 @@ Tab Bundlr organizes browser tabs into user-defined Chrome tab-group workspaces.
 
 **Tab Groups:** Creates, names, colors, collapses, and orders Tab Bundlr-managed Chrome groups.
 
-**Optional website access:** A user-authored Workspace Source may request only its declared HTTPS API origins when the user explicitly enables it. Core URL-rule organization requires no external host access.
+**Optional website access:** A user-authored connection may request only its declared HTTPS service addresses when the user explicitly enables it. Tab Bundlr shows those addresses before Chrome requests permission. Core URL-rule organization requires no external host access.
 
 ## Privacy summary
 

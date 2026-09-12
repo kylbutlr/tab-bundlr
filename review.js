@@ -140,7 +140,7 @@ function renderDuplicates(duplicates) {
   if (!duplicates.length) {
     const empty = document.createElement('p');
     empty.className = 'review-empty';
-    empty.textContent = 'No duplicate URL clusters found.';
+    empty.textContent = 'No duplicate URLs need review.';
     duplicateList.append(empty);
     return;
   }
@@ -260,7 +260,7 @@ function renderUnassignedTabs(tabs) {
   if (!tabs.length) {
     const empty = document.createElement('p');
     empty.className = 'review-empty';
-    empty.textContent = 'Every reviewable tab has a known assignment.';
+    empty.textContent = 'Every reviewable tab has a known assignment. Create or edit rules in Settings when your workspace changes.';
     unassignedList.append(empty);
     return;
   }
@@ -301,7 +301,7 @@ function renderActivity(history) {
   if (!history.length) {
     const empty = document.createElement('p');
     empty.className = 'review-empty';
-    empty.textContent = 'No recent Tab Bundlr moves.';
+    empty.textContent = 'No recent Tab Bundlr moves. Moves from Fix, automatic grouping, and saved assignments will appear here.';
     activityList.append(empty);
     return;
   }
@@ -341,7 +341,7 @@ function renderStaleTabs(tabs) {
   if (!tabs.length) {
     const empty = document.createElement('p');
     empty.className = 'review-empty';
-    empty.textContent = 'No probably stale tabs match this threshold.';
+    empty.textContent = 'No inactive tabs are older than the selected threshold.';
     staleList.append(empty);
     closeSelectedStale.disabled = true;
     return;

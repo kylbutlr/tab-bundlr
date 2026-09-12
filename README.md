@@ -8,7 +8,7 @@ It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cl
 
 ## Status
 
-Tab Bundlr 0.8.1 is available as public source and can be loaded locally in Chrome. It has not been published to the Chrome Web Store. The core local workflow requires no account or external integration; two optional provider and migration checks remain documented in the [public beta verification checklist](docs/verification.md).
+Tab Bundlr 0.8.2 is available as public source and can be loaded locally in Chrome. It has not been published to the Chrome Web Store. The core local workflow requires no account or external integration; two optional provider and migration checks remain documented in the [public beta verification checklist](docs/verification.md).
 
 ## Highlights
 
@@ -149,6 +149,7 @@ Packaging creates a local artifact and does not publish a GitHub release or Chro
 ## Documentation
 
 - [Installation](docs/installation.md)
+- In-extension Help and Privacy page (`help.html`)
 - [Privacy](docs/privacy.md)
 - [Support](docs/support.md)
 - [Troubleshooting](docs/troubleshooting.md)

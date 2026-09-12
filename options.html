@@ -11,6 +11,16 @@
       <p class="eyebrow">Tab Bundlr</p>
       <h1>Build predictable browser workspaces.</h1>
       <p class="lede">Create transparent URL rules, organize on demand, and choose exactly which automatic behaviors to enable. Accounts and external services are optional.</p>
+      <nav class="help-links" aria-label="Help and privacy">
+        <a href="help.html#first-use">First-use guide</a>
+        <a href="help.html#privacy">Privacy</a>
+        <a href="help.html#support">Support</a>
+      </nav>
+      <aside class="privacy-note" aria-labelledby="local-by-default-title">
+        <strong id="local-by-default-title">Local by default</strong>
+        <p>Tab Bundlr reads tab titles and URLs to match your rules. Settings and recent move history stay in Chrome on this device. Nothing is sent elsewhere unless you enable an optional connection.</p>
+        <a href="help.html#privacy">See what is stored, sent, and deleted</a>
+      </aside>
 
       <form id="settings-form" class="card">
         <label class="toggle-row" for="enabled">
@@ -158,15 +168,16 @@
 
       <section class="card">
         <p class="eyebrow">Saved destinations</p>
-        <h2>Workspace link rules</h2>
-        <p class="field-help">Teach creates these rules from the popup, and you can add or edit them here. A more specific saved destination can override a broader Smart Group prefix.</p>
+        <h2>Saved workspace rules</h2>
+        <p class="field-help">Save a URL prefix to a workspace from the popup, or add and edit rules here. A more specific saved workspace rule can override a broader Smart Group prefix.</p>
         <form id="client-rule-form" class="client-rule-form">
           <label for="client-rule-name">Workspace name</label>
           <input id="client-rule-name" type="text" maxlength="80" placeholder="Project Atlas" required>
           <label for="client-rule-epic-id">Workspace ID</label>
           <input id="client-rule-epic-id" type="text" placeholder="project-atlas" required>
+          <p class="field-help compact-help">A short unique ID stored with this workspace in your settings and backups.</p>
           <label for="client-rule-pattern">URL prefix</label>
-          <input id="client-rule-pattern" type="url" placeholder="https://admin.shopify.com/store/example" required>
+          <input id="client-rule-pattern" type="url" placeholder="https://dashboard.example.com/project/" required>
           <p id="client-rule-overlap" class="rule-warning" aria-live="polite"></p>
           <div class="actions">
             <button id="client-rule-submit" type="submit">Add rule</button>
@@ -192,15 +203,15 @@
       </section>
 
       <section class="card">
-        <p class="eyebrow">Optional integrations</p>
-        <h2>Workspace Sources</h2>
-        <p class="field-help">Workspace Sources are visible JSON profiles. They may read metadata from approved HTTPS APIs using GET requests only. Imported sources stay disabled until you review and enable them.</p>
+        <p class="eyebrow">Optional connections</p>
+        <h2>Connections from JSON</h2>
+        <p class="field-help">A connection can match supported pages and read workspace names from an HTTPS service. Its JSON, requested addresses, and credentials remain visible here. New connections stay off until you review and enable them. <a href="help.html#connections">Learn how connections handle data</a>.</p>
         <div id="workspace-sources" class="trained-rules" aria-live="polite"></div>
         <form id="workspace-source-form" class="smart-group-form">
           <label for="workspace-source-json">Source JSON</label>
           <textarea id="workspace-source-json" rows="12" spellcheck="false" placeholder='{"schemaVersion":1,"id":"tracker","name":"Project Tracker"}' required></textarea>
           <div class="actions">
-            <button type="submit">Save disabled source</button>
+            <button type="submit">Save connection off</button>
             <button id="workspace-source-clear" class="secondary" type="button">Clear</button>
           </div>
           <p id="workspace-source-status" class="status" role="status" aria-live="polite"></p>
@@ -210,7 +221,7 @@
       <section class="card">
         <p class="eyebrow">Backup</p>
         <h2>Export or import settings</h2>
-        <p class="field-help">Export grouping rules, Workspace Source definitions, colors, ordering, and review preferences. Credentials, open tabs, paused windows, Chrome group IDs, Focus holds, and undo history are excluded. Imported sources remain disabled and require their credentials again.</p>
+        <p class="field-help">Export grouping rules, connection definitions, colors, ordering, and review preferences. Credentials, open tabs, paused windows, Chrome group IDs, Focus holds, and undo history are excluded. Imported connections remain off and require their credentials again.</p>
         <div class="actions">
           <button id="export-settings" type="button">Export JSON</button>
           <label class="file-button secondary" for="import-settings">Import JSON</label>
@@ -226,8 +237,21 @@
         <p id="backup-status" class="status" role="status" aria-live="polite"></p>
       </section>
 
-      <p class="help">Tab Bundlr has no hosted account, analytics, advertising, or cloud synchronization.</p>
+      <p class="help">Tab Bundlr has no hosted account, analytics, advertising, or cloud synchronization. <a href="help.html#privacy">Read the complete privacy explanation</a>.</p>
     </main>
+    <dialog id="source-permission-dialog" aria-labelledby="source-permission-title" aria-describedby="source-permission-copy">
+      <form method="dialog">
+        <p class="eyebrow">Before you connect</p>
+        <h2 id="source-permission-title">Allow read-only service access?</h2>
+        <p id="source-permission-copy" class="dialog-copy"></p>
+        <ul id="source-permission-origins" class="permission-origins"></ul>
+        <p class="dialog-note">Saved credentials are sent only as headers defined by this connection. Tab Bundlr uses GET requests, rejects redirects, and does not upload settings or browsing history.</p>
+        <div class="dialog-actions">
+          <button id="source-permission-cancel" class="secondary" type="button">Cancel</button>
+          <button id="source-permission-continue" type="button">Continue to Chrome</button>
+        </div>
+      </form>
+    </dialog>
     <script type="module" src="options.js"></script>
   </body>
 </html>
