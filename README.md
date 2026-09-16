@@ -4,7 +4,7 @@ Tab Bundlr organizes browser tabs into predictable workspaces using transparent 
 
 It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cloud synchronization, or project-management service is required. Settings stay in Chrome extension storage unless the user explicitly exports them.
 
-[Product overview](https://kylbutlr.com/apps/tab-bundlr) · [Report an issue](https://github.com/kylbutlr/tab-bundlr/issues)
+[Report an issue](https://github.com/kylbutlr/tab-bundlr/issues)
 
 ## Status
 
