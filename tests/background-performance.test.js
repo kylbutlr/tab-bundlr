@@ -2148,3 +2148,211 @@ test('releases disabled collection groups and reassigns their open tabs through 
     delete globalThis.chrome;
   }
 });
+
+test('does not repeat managed-tab reconciliation when Chrome completes the same URL navigation', async () => {
+  const windowId = 31;
+  const groupId = 301;
+  const tab = {
+    id: 3101,
+    windowId,
+    groupId,
+    index: 0,
+    active: true,
+    pinned: false,
+    title: 'Existing workspace tab',
+    url: 'https://work.example.com/items/3101',
+  };
+  const localValues = {
+    settingsVersion: 2,
+    tabBundlrEnabled: true,
+    workspaceSources: [],
+    workspaceSourceSecrets: {},
+    openerInheritance: true,
+    persistentHomeBases: [],
+    groupRecords: {
+      [`${windowId}:smart:work`]: {
+        groupId,
+        windowId,
+        workspaceType: 'smart',
+        smartGroupId: 'work',
+        epicId: 'smart:work',
+        epicName: 'Work',
+      },
+    },
+    smartGroups: [{ id: 'work', name: 'Work', patterns: ['https://work.example.com/'] }],
+    trainedRules: [],
+    managedGroupTypeEnabled: { client: true, iteration: true, smart: true, 'focus-smart': true },
+    autoOrganizeGroups: false,
+  };
+  const sessionValues = {
+    sessionReconciled: true,
+    persistentHomeBasesReconciled: true,
+    persistentHomeBaseAnchors: {},
+    pausedWindowIds: [],
+    windowAutomationMode: 'all',
+    selectedWindowIds: [],
+  };
+  let localReads = 0;
+  const localStorage = storageArea(localValues, {
+    afterGet() { localReads += 1; },
+  });
+  globalThis.chrome = {
+    storage: {
+      local: localStorage,
+      session: storageArea(sessionValues),
+      onChanged: extensionEvent(),
+    },
+    tabs: {
+      async query() { return [{ ...tab }]; },
+      onCreated: extensionEvent(), onUpdated: extensionEvent(), onDetached: extensionEvent(),
+      onAttached: extensionEvent(), onRemoved: extensionEvent(),
+    },
+    tabGroups: {
+      async query() { return [{ id: groupId, windowId, title: 'Work', color: 'grey' }]; },
+      onCreated: extensionEvent(), onMoved: extensionEvent(),
+    },
+    windows: { async getAll() { return [{ id: windowId }]; }, onRemoved: extensionEvent() },
+    runtime: { onMessage: extensionEvent(), openOptionsPage() {} },
+  };
+
+  try {
+    const worker = await import('../background.js?performance=navigation-deduplication');
+    await worker.TabBundlrBackground.initializeForSession();
+    localReads = 0;
+
+    await worker.TabBundlrBackground.processUpdatedTab({ url: tab.url, status: 'loading' }, { ...tab });
+    const navigationReads = localReads;
+    assert.ok(navigationReads > 0);
+
+    await worker.TabBundlrBackground.processUpdatedTab({ status: 'complete' }, { ...tab });
+    assert.equal(localReads, navigationReads);
+
+    await worker.TabBundlrBackground.processUpdatedTab({ status: 'loading' }, { ...tab });
+    await worker.TabBundlrBackground.processUpdatedTab({ status: 'complete' }, { ...tab });
+    assert.ok(localReads > navigationReads);
+  } finally {
+    delete globalThis.chrome;
+  }
+});
+
+test('does not rescan every tab when a Chrome group is only reordered', async () => {
+  const movedEvent = capturingEvent();
+  const localValues = {
+    settingsVersion: 2,
+    smartGroups: [],
+    groupRecords: {},
+    managedGroupTypeEnabled: { client: true, iteration: true, smart: true, 'focus-smart': true },
+  };
+  const sessionValues = {
+    sessionReconciled: true,
+    persistentHomeBasesReconciled: true,
+    pausedWindowIds: [],
+    windowAutomationMode: 'all',
+    selectedWindowIds: [],
+  };
+  let allTabQueries = 0;
+  let focusHeldWrites = 0;
+  const localStorage = storageArea(localValues);
+  const originalSet = localStorage.set;
+  localStorage.set = async (next) => {
+    if (Object.prototype.hasOwnProperty.call(next, 'focusHeldTabs')) focusHeldWrites += 1;
+    return originalSet(next);
+  };
+  globalThis.chrome = {
+    storage: {
+      local: localStorage,
+      session: storageArea(sessionValues),
+      onChanged: extensionEvent(),
+    },
+    tabs: {
+      async query(queryInfo = {}) {
+        if (Object.keys(queryInfo).length === 0) allTabQueries += 1;
+        return [];
+      },
+      onCreated: extensionEvent(), onUpdated: extensionEvent(), onDetached: extensionEvent(),
+      onAttached: extensionEvent(), onRemoved: extensionEvent(),
+    },
+    tabGroups: {
+      async query() { return []; },
+      onCreated: extensionEvent(),
+      onMoved: movedEvent,
+    },
+    windows: { async getAll() { return []; }, onRemoved: extensionEvent() },
+    runtime: { onMessage: extensionEvent(), openOptionsPage() {} },
+  };
+
+  try {
+    const worker = await import('../background.js?performance=group-reorder');
+    await worker.TabBundlrBackground.initializeForSession();
+    allTabQueries = 0;
+    focusHeldWrites = 0;
+
+    for (let index = 0; index < 20; index += 1) movedEvent.listener()?.({ id: index + 1 });
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.equal(allTabQueries, 0);
+    assert.equal(focusHeldWrites, 0);
+  } finally {
+    delete globalThis.chrome;
+  }
+});
+
+test('coalesces rapid tab activation history persistence', async () => {
+  const activatedEvent = capturingEvent();
+  const localValues = { settingsVersion: 2 };
+  const sessionValues = {
+    sessionReconciled: true,
+    persistentHomeBasesReconciled: true,
+    pausedWindowIds: [],
+    windowAutomationMode: 'all',
+    selectedWindowIds: [],
+  };
+  let activationHistoryWrites = 0;
+  const sessionStorage = storageArea(sessionValues);
+  const originalSet = sessionStorage.set;
+  sessionStorage.set = async (next) => {
+    if (Object.prototype.hasOwnProperty.call(next, 'tabActivationHistory')) activationHistoryWrites += 1;
+    return originalSet(next);
+  };
+  globalThis.chrome = {
+    storage: {
+      local: storageArea(localValues),
+      session: sessionStorage,
+      onChanged: extensionEvent(),
+    },
+    tabs: {
+      async query(queryInfo = {}) {
+        if (queryInfo.active === true) return [{ id: 1, windowId: 41, active: true }];
+        return [];
+      },
+      onCreated: extensionEvent(),
+      onActivated: activatedEvent,
+      onUpdated: extensionEvent(),
+      onDetached: extensionEvent(),
+      onAttached: extensionEvent(),
+      onRemoved: extensionEvent(),
+    },
+    tabGroups: {
+      async query() { return []; },
+      onCreated: extensionEvent(), onMoved: extensionEvent(),
+    },
+    windows: { async getAll() { return [{ id: 41 }]; }, onRemoved: extensionEvent() },
+    runtime: { onMessage: extensionEvent(), openOptionsPage() {} },
+  };
+
+  try {
+    const worker = await import('../background.js?performance=activation-history');
+    await worker.TabBundlrBackground.initializeForSession();
+    activationHistoryWrites = 0;
+
+    for (let tabId = 2; tabId <= 41; tabId += 1) {
+      activatedEvent.listener()({ tabId, windowId: 41 });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    assert.equal(activationHistoryWrites, 1);
+  } finally {
+    delete globalThis.chrome;
+  }
+});

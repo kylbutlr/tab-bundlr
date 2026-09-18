@@ -104,6 +104,7 @@ import {
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const ERROR_TTL_MS = 30 * 1000;
 const EXTERNAL_TAB_ROUTE_CANDIDATE_TTL_MS = 10 * 1000;
+const TAB_ACTIVATION_HISTORY_PERSIST_DELAY_MS = 75;
 const MAX_API_CONCURRENCY = 4;
 const SESSION_RECONCILED_STORAGE_KEY = 'sessionReconciled';
 const PERSISTENT_HOME_BASES_RECONCILED_STORAGE_KEY = 'persistentHomeBasesReconciled';
@@ -116,6 +117,7 @@ const detachedTabOrigins = new Map();
 const pendingExternalTabRoutes = new Map();
 const freshExternalGroupTabs = new Map();
 const pendingFreshExternalGroups = new Map();
+const pendingNavigationCompletions = new Map();
 const pausedWindowIds = new Set();
 const ignoredTabActivationTargets = new Map();
 let windowAutomationPolicy = normalizeWindowAutomationPolicy();
@@ -124,6 +126,7 @@ const localSnapshotRequests = new Map();
 const persistentHomeBaseRequests = new Map();
 let temporaryActivationBadgeTimer = null;
 let tabActivationHistoryWrite = Promise.resolve();
+let pendingTabActivationHistoryWrite = null;
 let lastActionWrite = Promise.resolve();
 let focusHeldTabsWrite = Promise.resolve();
 let persistentHomeBaseAnchorsWrite = Promise.resolve();
@@ -188,12 +191,34 @@ function now() {
   return Date.now();
 }
 
-function persistTabActivationHistory() {
+function flushTabActivationHistory(batch) {
+  if (!batch || pendingTabActivationHistoryWrite !== batch) return batch?.promise || Promise.resolve();
+  if (batch.timer !== null) clearTimeout(batch.timer);
+  pendingTabActivationHistoryWrite = null;
   const snapshot = tabActivationHistory;
   const write = tabActivationHistoryWrite
     .then(() => chrome.storage.session.set({ [TAB_ACTIVATION_HISTORY_STORAGE_KEY]: snapshot }));
   tabActivationHistoryWrite = write.catch(() => {});
-  return write;
+  write.then(batch.resolve, batch.reject);
+  return batch.promise;
+}
+
+function persistTabActivationHistory({ immediate = false } = {}) {
+  let batch = pendingTabActivationHistoryWrite;
+  if (!batch) {
+    batch = { timer: null, promise: null, resolve: null, reject: null };
+    batch.promise = new Promise((resolve, reject) => {
+      batch.resolve = resolve;
+      batch.reject = reject;
+    });
+    batch.timer = setTimeout(
+      () => flushTabActivationHistory(batch),
+      TAB_ACTIVATION_HISTORY_PERSIST_DELAY_MS,
+    );
+    pendingTabActivationHistoryWrite = batch;
+  }
+  if (immediate) flushTabActivationHistory(batch);
+  return batch.promise;
 }
 
 async function recordActiveTab(tabId, windowId) {
@@ -221,7 +246,7 @@ async function seedActiveTabHistory() {
     tabActivationHistory = recordTabActivation(tabActivationHistory, tab.windowId, tab.id);
     changed = true;
   });
-  if (changed) await persistTabActivationHistory();
+  if (changed) await persistTabActivationHistory({ immediate: true });
 }
 
 async function activatePreviousTab() {
@@ -253,20 +278,20 @@ async function activatePreviousTab() {
           expiresAt: now() + 2_000,
         });
       }
-      await persistTabActivationHistory();
+      await persistTabActivationHistory({ immediate: true });
       try {
         await chrome.tabs.update(target.tabId, { active: true });
       } catch (error) {
         ignoredTabActivationTargets.delete(Number(target.tabId));
         tabActivationHistory = previousHistory;
-        await persistTabActivationHistory().catch(() => {});
+        await persistTabActivationHistory({ immediate: true }).catch(() => {});
         throw error;
       }
       return { ok: true, tabId: target.tabId, mode };
     } catch {
       ignoredTabActivationTargets.delete(Number(target.tabId));
       tabActivationHistory = removeTabFromActivationHistory(tabActivationHistory, target.tabId);
-      await persistTabActivationHistory().catch(() => {});
+      await persistTabActivationHistory({ immediate: true }).catch(() => {});
       target = previousTabTarget(tabActivationHistory, activeTab.windowId, activeTab.id, mode);
     }
   }
@@ -277,13 +302,13 @@ async function forgetTabActivation(tabId) {
   await tabActivationHistoryReady;
   ignoredTabActivationTargets.delete(Number(tabId));
   tabActivationHistory = removeTabFromActivationHistory(tabActivationHistory, tabId);
-  await persistTabActivationHistory();
+  await persistTabActivationHistory({ immediate: true });
 }
 
 async function forgetWindowTabActivationHistory(windowId) {
   await tabActivationHistoryReady;
   tabActivationHistory = removeWindowFromActivationHistory(tabActivationHistory, windowId);
-  await persistTabActivationHistory();
+  await persistTabActivationHistory({ immediate: true });
 }
 
 function rememberFreshExternalGroupTab(tabId, sourceWindowId) {
@@ -1478,10 +1503,9 @@ async function reconcilePersistentHomeBase(homeBaseUrl, {
 
 async function handlePersistentHomeBaseTabUpdate(changeInfo, tab) {
   if (!tab || tab.id === undefined || tab.pinned || !changeInfo?.url) return null;
-  const [configured, anchors] = await Promise.all([
-    getPersistentHomeBases(),
-    getPersistentHomeBaseAnchors(),
-  ]);
+  const configured = await getPersistentHomeBases();
+  if (!configured.length) return null;
+  const anchors = await getPersistentHomeBaseAnchors();
   const anchoredUrl = duplicateKeyForUrl(anchors[String(tab.id)]);
   if (anchoredUrl && !configured.includes(anchoredUrl)) {
     await forgetPersistentHomeBaseAnchor(tab.id);
@@ -3149,8 +3173,7 @@ async function statusForPopup(requestedWindowId) {
   };
 }
 
-async function processUpdatedTab(changeInfo, tab) {
-  if (!isRelevantTabUpdate(changeInfo)) return { status: 'irrelevant-update' };
+async function processRelevantTabUpdate(changeInfo, tab) {
   if (changeInfo.url && await routeExternalTabToSelectedWindow(tab, { requirePending: true })) {
     return { status: 'routed-to-selected-window' };
   }
@@ -3186,7 +3209,43 @@ async function processUpdatedTab(changeInfo, tab) {
   if (!changeInfo.url && changeInfo.status !== 'complete') return;
   const settings = await getSettings();
   if (settings.openerInheritance && await inheritFocusFromOpener(tab)) return;
-  await safelyProcess(tab, changeInfo.url ? 'story-navigation' : 'story-ready');
+  return safelyProcess(tab, changeInfo.url ? 'story-navigation' : 'story-ready');
+}
+
+async function processUpdatedTab(changeInfo, tab) {
+  const tabId = Number(tab?.id);
+  if (changeInfo?.status === 'loading' && !changeInfo.url) {
+    pendingNavigationCompletions.delete(tabId);
+    return { status: 'navigation-loading' };
+  }
+  if (!isRelevantTabUpdate(changeInfo)) return { status: 'irrelevant-update' };
+  const currentUrl = String(changeInfo.url || tab?.url || '');
+  if (!changeInfo.url && changeInfo.status === 'complete') {
+    const pendingCompletion = pendingNavigationCompletions.get(tabId);
+    if (pendingCompletion?.url === currentUrl) {
+      pendingNavigationCompletions.delete(tabId);
+      try {
+        await pendingCompletion.request;
+        return { status: 'navigation-already-processed' };
+      } catch {
+        return processRelevantTabUpdate(changeInfo, tab);
+      }
+    }
+  }
+  if (changeInfo.url && changeInfo.status !== 'complete') {
+    const request = processRelevantTabUpdate(changeInfo, tab);
+    const pendingCompletion = { url: currentUrl, request };
+    pendingNavigationCompletions.set(tabId, pendingCompletion);
+    try {
+      return await request;
+    } catch (error) {
+      if (pendingNavigationCompletions.get(tabId) === pendingCompletion) {
+        pendingNavigationCompletions.delete(tabId);
+      }
+      throw error;
+    }
+  }
+  return processRelevantTabUpdate(changeInfo, tab);
 }
 
 async function processAttachedTab(tabId, attachInfo) {
@@ -3275,11 +3334,12 @@ chrome.tabs.onActivated?.addListener((activeInfo) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (!isRelevantTabUpdate(changeInfo)) return;
+  if (!isRelevantTabUpdate(changeInfo) && changeInfo?.status !== 'loading') return;
   processUpdatedTab(changeInfo, tab).catch(() => {});
 });
 
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
+  pendingNavigationCompletions.delete(Number(tabId));
   pendingExternalTabRoutes.delete(Number(tabId));
   freshExternalGroupTabs.delete(Number(tabId));
   detachedTabOrigins.set(Number(tabId), Number(detachInfo?.oldWindowId));
@@ -3292,6 +3352,7 @@ chrome.tabs.onAttached.addListener((tabId, attachInfo) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  pendingNavigationCompletions.delete(Number(tabId));
   pendingExternalTabRoutes.delete(Number(tabId));
   freshExternalGroupTabs.delete(Number(tabId));
   detachedTabOrigins.delete(Number(tabId));
@@ -3310,10 +3371,6 @@ chrome.tabGroups.onCreated.addListener((group) => {
   processCreatedGroup(group, { rememberPending: true })
     .then(() => reconcileFocusHeldTabs())
     .catch(() => {});
-});
-
-chrome.tabGroups.onMoved.addListener(() => {
-  reconcileFocusHeldTabs().catch(() => {});
 });
 
 chrome.commands?.onCommand.addListener((command) => {
