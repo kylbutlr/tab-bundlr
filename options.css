@@ -1,3 +1,4 @@
+@import "app-stylr.css";
 @font-face {
   font-family: "Geist Sans";
   src: url("fonts/Geist-Variable.woff2") format("woff2");
@@ -16,17 +17,17 @@
 
 :root {
   color-scheme: dark;
-  --canvas: #0d1010;
-  --surface: #171b1b;
-  --surface-raised: #1d2222;
-  --border: #303838;
-  --border-strong: #465351;
-  --text: #f3f7f5;
-  --muted: #a9b5b2;
-  --accent: #a9cec2;
-  --accent-text: #111111;
+  --canvas: var(--ui-canvas);
+  --surface: var(--ui-surface);
+  --surface-raised: var(--ui-surface-raised);
+  --border: var(--ui-border);
+  --border-strong: var(--ui-border-strong);
+  --text: var(--ui-text);
+  --muted: var(--ui-text-muted);
+  --accent: var(--ui-accent);
+  --accent-text: var(--ui-accent-text);
   --link: #a9cec2;
-  --danger: #ff9189;
+  --danger: var(--ui-danger);
 }
 
 * { box-sizing: border-box; }
@@ -72,9 +73,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .window-automation-row.is-disabled { opacity: .55; cursor: default; }
 .window-session-help { margin: 12px 0 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-button { min-height: 42px; padding: 0 16px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-text); cursor: pointer; font: inherit; font-weight: 650; }
+button { min-height: 42px; padding: 0 16px; border: 1px solid var(--accent); border-radius: var(--radius-button); background: var(--accent); color: var(--accent-text); cursor: pointer; font: inherit; font-weight: 650; }
 button.secondary { border-color: var(--border-strong); background: transparent; color: var(--text); }
-.file-button { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; margin-bottom: 0; border: 1px solid var(--border-strong); border-radius: 8px; background: transparent; color: var(--text); cursor: pointer; font-size: 16px; font-weight: 650; }
+.file-button { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; margin-bottom: 0; border: 1px solid var(--border-strong); border-radius: var(--radius-button); background: transparent; color: var(--text); cursor: pointer; font-size: 16px; font-weight: 650; }
 .file-button:hover { border-color: var(--accent); }
 .backup-preview { margin-top: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); }
 .backup-preview > summary { padding: 12px 14px; cursor: pointer; color: var(--accent); font-weight: 650; }

@@ -159,7 +159,7 @@ Packaging creates a local artifact and does not publish a GitHub release or Chro
 
 ## App Stylr
 
-Tab Bundlr follows the pinned [App Stylr v0.2.0](https://github.com/kylbutlr/app-stylr/tree/v0.2.0) contract for its standalone popup and options surfaces. Review the current [App Stylr Visual Reference](https://app-stylr.netlify.app/) as guidance, but upgrade the pinned release deliberately before adopting newer contract requirements.
+Tab Bundlr follows the pinned [App Stylr v1.2.0 source](https://github.com/kylbutlr/app-stylr/tree/b3ca31ea264d5dd233fd871ac167247f1c306985) contract for its standalone popup and options surfaces. Review the current [App Stylr Visual Reference](https://app-stylr.netlify.app/) as guidance, but upgrade the pinned release deliberately before adopting newer contract requirements.
 
 The popup width exception and current styling boundary are documented in [docs/app-stylr-exceptions.md](docs/app-stylr-exceptions.md).
 
@@ -170,3 +170,5 @@ Start with the [support guide](docs/support.md) and [troubleshooting guide](docs
 ## License
 
 Tab Bundlr is available under the [MIT License](LICENSE).
+
+Current styling source: [App Stylr Evening adoption](docs/app-stylr-evening-adoption.md).

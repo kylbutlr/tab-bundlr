@@ -1,6 +1,7 @@
+@import "app-stylr.css";
 @font-face { font-family: "Geist Sans"; src: url("fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
 @font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-:root { color-scheme: dark; --canvas: #0d1010; --surface: #171b1b; --raised: #1d2222; --border: #303838; --border-strong: #465351; --text: #f3f7f5; --muted: #a9b5b2; --accent: #a9cec2; --accent-text: #111; }
+:root { color-scheme: dark; --canvas: var(--ui-canvas); --surface: var(--ui-surface); --raised: var(--ui-surface-raised); --border: var(--ui-border); --border-strong: var(--ui-border-strong); --text: var(--ui-text); --muted: var(--ui-text-muted); --accent: var(--ui-accent); --accent-text: var(--ui-accent-text); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--canvas); color: var(--text); font: 16px/1.55 "Geist Sans", Inter, system-ui, sans-serif; }
@@ -16,7 +17,7 @@ h1 { margin: 0; font-size: 42px; line-height: 1.08; }
 h2 { margin: 0 0 12px; font-size: 25px; line-height: 1.2; }
 h3 { margin: 0 0 5px; font-size: 16px; }
 .lede { max-width: 620px; margin: 12px 0 0; color: var(--muted); }
-.button-link { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-text); font-weight: 650; text-decoration: none; white-space: nowrap; }
+.button-link { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border: 1px solid var(--accent); border-radius: var(--radius-button); background: var(--accent); color: var(--accent-text); font-weight: 650; text-decoration: none; white-space: nowrap; }
 .button-link.secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
 .section-nav { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: 14px; }
 .content-section { padding: 36px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 20px; }
@@ -24,7 +25,7 @@ h3 { margin: 0 0 5px; font-size: 16px; }
 .steps { display: grid; gap: 12px; padding-left: 24px; }
 .steps li { padding-left: 4px; }
 .action-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.action-list > div, .privacy-grid article { padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.action-list > div, .privacy-grid article { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-button); background: var(--surface); }
 .action-list dt { font-weight: 700; }
 .action-list dd { margin: 3px 0 0; color: var(--muted); font-size: 14px; }
 .privacy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }

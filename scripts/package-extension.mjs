@@ -9,6 +9,7 @@ const outputDirectory = path.join(root, 'dist');
 const output = path.join(outputDirectory, `tab-bundlr-${manifest.version}.zip`);
 const files = [
   'manifest.json',
+  'app-stylr.css',
   'backup.js',
   'background.js',
   'core.js',

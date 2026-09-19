@@ -1,6 +1,7 @@
+@import "app-stylr.css";
 @font-face { font-family: "Geist Sans"; src: url("fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
 @font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-:root { color-scheme: dark; --canvas: #0d1010; --surface: #171b1b; --raised: #1d2222; --border: #303838; --border-strong: #465351; --text: #f3f7f5; --muted: #a9b5b2; --accent: #a9cec2; --accent-text: #111; --warn: #f2c46f; }
+:root { color-scheme: dark; --canvas: var(--ui-canvas); --surface: var(--ui-surface); --raised: var(--ui-surface-raised); --border: var(--ui-border); --border-strong: var(--ui-border-strong); --text: var(--ui-text); --muted: var(--ui-text-muted); --accent: var(--ui-accent); --accent-text: var(--ui-accent-text); --warn: #f2c46f; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--canvas); color: var(--text); font: 15px/1.45 "Geist Sans", Inter, system-ui, sans-serif; }
 .review-shell { width: min(920px, calc(100% - 40px)); margin: 44px auto 64px; }
@@ -21,7 +22,7 @@ h2 { margin: 0; font-size: 22px; line-height: 1.15; }
 .threshold-control { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
 select, button, input { font: inherit; }
 select, input { min-height: 34px; padding: 0 9px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--raised); color: var(--text); }
-button { min-height: 36px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: var(--accent-text); cursor: pointer; font-weight: 650; }
+button { min-height: 36px; padding: 0 12px; border: 1px solid var(--accent); border-radius: var(--radius-button); background: var(--accent); color: var(--accent-text); cursor: pointer; font-weight: 650; }
 button.secondary { border-color: var(--border-strong); background: transparent; color: var(--text); }
 a { color: var(--accent); }
 button:disabled { cursor: not-allowed; opacity: .45; }
