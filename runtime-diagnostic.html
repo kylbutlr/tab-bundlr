@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tab Bundlr diagnostic</title>
+    <link rel="stylesheet" href="help.css">
+    <script type="module" src="runtime-diagnostic-page.js"></script>
+  </head>
+  <body>
+    <main id="main">
+      <h1>Routing and speed diagnostic</h1>
+      <p>Records routing decisions, temporary tab/window IDs, counts and popup timings. No URLs, titles, page content or network requests. Nothing is sent anywhere.</p>
+      <p>Capture lasts five minutes, holds at most 128 entries, and is cleared if Chrome restarts the extension worker. A fresh worker starts a short capture automatically. There is no polling or background storage writing.</p>
+      <ol>
+        <li>Start a capture here, then return to your Meet window.</li>
+        <li>Drag a tab into it and open one external link, as before. Open the Tab Bundlr popup once.</li>
+        <li>Return here, refresh the report, then download it. Review the file before sharing it.</li>
+      </ol>
+      <p>
+        <button type="button" id="start">Start five-minute capture</button>
+        <button type="button" id="refresh">Refresh report</button>
+        <button type="button" id="stop">Stop capture</button>
+        <button type="button" id="clear">Clear capture</button>
+        <button type="button" id="download" disabled>Download report</button>
+      </p>
+      <p id="status" role="status" aria-live="polite">Ready. Refresh to read the latest capture.</p>
+      <pre id="report" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+      <p><a href="help.html">Help and privacy</a></p>
+    </main>
+  </body>
+</html>

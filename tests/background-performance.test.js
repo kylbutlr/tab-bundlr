@@ -36,6 +36,35 @@ function storageArea(values, { afterGet } = {}) {
   };
 }
 
+test('popup status scales linearly with tab membership checks', async (t) => {
+  let membershipReads = 0;
+  const tabs = Array.from({ length: 1000 }, (_, id) => ({
+    id, windowId: 1, index: id, active: id === 0, url: `https://example.com/${id}`,
+    get groupId() { membershipReads += 1; return id % 100; },
+  }));
+  const groups = Array.from({ length: 100 }, (_, id) => ({ id, windowId: 1, title: `Group ${id}` }));
+  const local = { smartGroups: [], trainedRules: [] };
+  const session = { sessionReconciled: true, persistentHomeBasesReconciled: true, windowAutomationMode: 'selected', selectedWindowIds: [1] };
+  globalThis.chrome = {
+    storage: { local: storageArea(local), session: storageArea(session), onChanged: extensionEvent() },
+    tabs: { async query() { return tabs; }, onCreated: extensionEvent(), onUpdated: extensionEvent(), onDetached: extensionEvent(), onAttached: extensionEvent(), onRemoved: extensionEvent() },
+    tabGroups: { async query() { return groups; }, onCreated: extensionEvent(), onMoved: extensionEvent() },
+    windows: { async getCurrent() { return { id: 1 }; }, async getAll() { return [{ id: 1 }]; }, onRemoved: extensionEvent() },
+    runtime: { onMessage: extensionEvent() },
+  };
+  try {
+    const { TabBundlrBackground: worker } = await import('../background.js?popup-scale=1');
+    await worker.initializeForSession();
+    membershipReads = 0;
+    const start = performance.now();
+    const result = await worker.statusForPopup(1);
+    t.diagnostic(`1000 tabs / 100 groups: ${(performance.now() - start).toFixed(1)}ms, ${membershipReads} membership reads`);
+    assert.equal(result.groups.length, 100);
+    assert.equal(result.groups.flatMap((group) => group.tabs).length, 1000);
+    assert.ok(membershipReads < 10000, `popup rescanned tab membership ${membershipReads} times`);
+  } finally { delete globalThis.chrome; }
+});
+
 test('treats chrome pages as ignored instead of unassigned in popup status', async () => {
   const windowId = 9;
   const groupId = 19;

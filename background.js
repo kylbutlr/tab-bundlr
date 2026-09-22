@@ -1,4 +1,6 @@
 import { createTrafficDiagnostic } from './traffic-diagnostic.js';
+import { createRuntimeDiagnostic } from './runtime-diagnostic.js';
+const runtimeDiagnostic = createRuntimeDiagnostic();
 import {
   ACTIVITY_HISTORY_STORAGE_KEY,
   ACTIVATE_OPENED_TABS_STORAGE_KEY,
@@ -1703,6 +1705,10 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   const tabId = Number(tab?.id);
   const sourceWindowId = Number(tab?.windowId);
   const pendingRoute = pendingExternalTabRoutes.get(tabId);
+  const report = (reason, destinationWindowId) => runtimeDiagnostic.record('routing', {
+    reason, tabId, sourceWindowId, destinationWindowId,
+    selectedCount: windowAutomationPolicy.selectedWindowIds.length,
+  });
   const pendingRouteIsCurrent = pendingRoute
     && pendingRoute.sourceWindowId === sourceWindowId
     && pendingRoute.expiresAt > now();
@@ -1711,6 +1717,8 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   const routingPolicy = await frozenWindowRoutingPolicy(sourceWindowId);
   if (!routingPolicy || routingPolicy.selectedWindowIds.length !== 1
     || routingPolicy.selectedWindowIds.includes(sourceWindowId)) {
+    report(unfrozenWindowIds.has(sourceWindowId) ? 'allowed-here'
+      : !routingPolicy || routingPolicy.selectedWindowIds.includes(sourceWindowId) ? 'source-managed' : 'ambiguous-target');
     pendingExternalTabRoutes.delete(tabId);
     return false;
   }
@@ -1723,6 +1731,7 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   if (destinationWindowId === null) {
     const hasNoUrl = !String(tab?.pendingUrl || tab?.url || '').trim();
     if (rememberPending && hasNoUrl && !tab?.pinned && sourceWindowAlreadyExisted) {
+      report('waiting-url');
       pendingExternalTabRoutes.set(tabId, {
         sourceWindowId,
         expiresAt: now() + EXTERNAL_TAB_ROUTE_CANDIDATE_TTL_MS,
@@ -1730,13 +1739,17 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
     } else if (requirePending) {
       pendingExternalTabRoutes.delete(tabId);
     }
+    if (!hasNoUrl) report('unsupported-or-first-tab');
     return false;
   }
   pendingExternalTabRoutes.delete(tabId);
-  if (pausedWindowIds.has(destinationWindowId)) return false;
+  if (pausedWindowIds.has(destinationWindowId)) { report('target-paused', destinationWindowId); return false; }
   const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
-  if (!windows.some((window) => Number(window.id) === destinationWindowId)) return false;
-  if (unfrozenWindowIds.has(sourceWindowId) || detachedTabOrigins.has(tabId)) return false;
+  if (!windows.some((window) => Number(window.id) === destinationWindowId)) { report('target-missing', destinationWindowId); return false; }
+  if (unfrozenWindowIds.has(sourceWindowId) || detachedTabOrigins.has(tabId)) {
+    report(unfrozenWindowIds.has(sourceWindowId) ? 'allowed-here' : 'manually-dragged');
+    return false;
+  }
   try {
     await chrome.tabs.move(tab.id, { windowId: destinationWindowId, index: -1 });
   } catch (error) {
@@ -1748,8 +1761,10 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
         sourceWindowId, attempts, expiresAt: pendingRoute?.expiresAt || now() + EXTERNAL_TAB_ROUTE_CANDIDATE_TTL_MS,
       });
     }
+    report(pendingExternalTabRoutes.has(tabId) ? 'retry-pending' : 'move-failed', destinationWindowId);
     return false;
   }
+  report('moved', destinationWindowId);
   try {
     if (tab.active) {
       await chrome.windows.update(destinationWindowId, { focused: true });
@@ -2988,6 +3003,8 @@ async function openWorkspaceTab(tabId) {
 }
 
 async function statusForPopup(requestedWindowId) {
+  const statusStarted = performance.now();
+  runtimeDiagnostic.record('popup-start');
   const currentWindow = await chrome.windows.getCurrent();
   const parsedWindowId = Number(requestedWindowId);
   const windowId = Number.isInteger(parsedWindowId) && parsedWindowId >= 0
@@ -3010,15 +3027,22 @@ async function statusForPopup(requestedWindowId) {
     getPersistentHomeBases(),
     getBrowserPageSmartGroupId(),
   ]);
+  const statusIoMs = performance.now() - statusStarted;
   const { windowPaused, windowPauseReason, manuallyPaused, policyAllowed } = windowAutomationState;
   const designatedFocusGroup = enabledTypes['focus-smart'] ? focusSmartGroup(smartGroups) : null;
   const browserPageGroup = enabledTypes.smart
     ? browserPageSmartGroup(smartGroups, browserPageGroupId)
     : null;
+  const tabsByGroup = new Map();
+  for (const tab of tabs) {
+    const groupId = Number(tab.groupId);
+    if (!tabsByGroup.has(groupId)) tabsByGroup.set(groupId, []);
+    tabsByGroup.get(groupId).push(tab);
+  }
   const summarized = summarizeGroups(groups, tabs).map((group) => {
     const record = recordForGroup(records, group.id, windowId);
-    const groupTabs = tabs
-      .filter((tab) => Number(tab.groupId) === Number(group.id))
+    const members = tabsByGroup.get(Number(group.id)) || [];
+    const groupTabs = members
       .map((tab) => {
         const role = tabRoleForUrl(tab.url);
         const browserAssignment = isBrowserPageUrl(tab.url) && browserPageGroup
@@ -3069,8 +3093,7 @@ async function statusForPopup(requestedWindowId) {
       isFocusGroup: Boolean(record?.workspaceType === 'smart'
         && designatedFocusGroup
         && String(record.smartGroupId) === String(designatedFocusGroup.id)),
-      firstTabIndex: tabs
-        .filter((tab) => Number(tab.groupId) === Number(group.id))
+      firstTabIndex: members
         .reduce((lowest, tab) => Math.min(lowest, Number(tab.index)), Number.MAX_SAFE_INTEGER),
       tabs: groupTabs,
       roleCounts,
@@ -3163,6 +3186,9 @@ async function statusForPopup(requestedWindowId) {
         roleLabel: activeAssignment.rule.roleLabel || tabRoleLabel(tabRoleForUrl(activeTab?.url)),
       }
       : null;
+  runtimeDiagnostic.record('popup-status', {
+    durationMs: performance.now() - statusStarted, ioMs: statusIoMs, tabCount: tabs.length, groupCount: groups.length,
+  });
   return {
     windowId,
     windowPaused,
@@ -3399,7 +3425,8 @@ async function forgetWindowAutomationState(windowId) {
 }
 
 chrome.tabs.onCreated.addListener((tab) => {
-  processCreatedTab(tab).catch(() => {});
+  runtimeDiagnostic.record('created', { tabId: tab.id, sourceWindowId: tab.windowId });
+  processCreatedTab(tab).catch(() => runtimeDiagnostic.record('routing', { reason: 'handler-failed', tabId: tab.id, sourceWindowId: tab.windowId }));
 });
 
 chrome.tabs.onActivated?.addListener((activeInfo) => {
@@ -3412,6 +3439,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
+  runtimeDiagnostic.record('detached', { tabId, sourceWindowId: detachInfo?.oldWindowId });
   pendingNavigationCompletions.delete(Number(tabId));
   pendingExternalTabRoutes.delete(Number(tabId));
   freshExternalGroupTabs.delete(Number(tabId));
@@ -3455,6 +3483,18 @@ chrome.commands?.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === 'RUNTIME_DIAGNOSTIC') {
+    try {
+      sendResponse({ ok: true, version: chrome.runtime.getManifest?.().version,
+        ...runtimeDiagnostic.command(message.action || 'get') });
+    } catch { sendResponse({ ok: false, error: 'Unknown diagnostic action.' }); }
+    return false;
+  }
+  if (message?.type === 'POPUP_TIMING') {
+    runtimeDiagnostic.record('popup-render', { messageMs: message.messageMs, renderMs: message.renderMs });
+    sendResponse({ ok: true });
+    return false;
+  }
   if (message?.type === 'REQUEST_DIAGNOSTIC') {
     trafficDiagnostic.command(message.action).then((report) => sendResponse({ ok: true, report }))
       .catch((error) => sendResponse({ ok: false, message: error.message }));

@@ -495,8 +495,10 @@ function renderReviewTabs(response) {
 }
 
 async function refresh({ preserveStatus = false } = {}) {
+  const refreshStarted = performance.now();
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.runtime.sendMessage({ type: 'GET_STATUS', windowId: activeTab?.windowId });
+  const responseAt = performance.now();
   if (!response?.ok) throw new Error(response?.error || 'Could not read Tab Bundlr status.');
   const automaticActive = response.enabled && !response.windowPaused;
   statePill.textContent = response.windowPauseReason === 'not-selected'
@@ -555,6 +557,7 @@ async function refresh({ preserveStatus = false } = {}) {
     : 'There is no recent Tab Bundlr move to undo.';
   fixWindow.disabled = response.windowPaused;
   organizeWindow.disabled = response.windowPaused;
+  void chrome.runtime.sendMessage({ type: 'POPUP_TIMING', messageMs: responseAt - refreshStarted, renderMs: performance.now() - responseAt }).catch(() => {});
 }
 
 undo.addEventListener('click', async () => {
