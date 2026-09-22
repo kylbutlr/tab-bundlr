@@ -118,10 +118,12 @@ export function externalTabDestinationWindowId(tab, sourceTabCount, policy) {
   if (!tab || tab.pinned || normalized.mode !== 'selected' || normalized.selectedWindowIds.length !== 1) return null;
   const sourceWindowAlreadyExisted = Number(tab.index) > 0 || Number(sourceTabCount) > 1;
   if (normalized.selectedWindowIds.includes(Number(tab.windowId)) || !sourceWindowAlreadyExisted) return null;
-  if (tab.openerTabId !== undefined && Number(tab.openerTabId) !== -1) return null;
   try {
     const url = new URL(tab.pendingUrl || tab.url || '');
-    return ['http:', 'https:'].includes(url.protocol) ? normalized.selectedWindowIds[0] : null;
+    const routable = ['http:', 'https:'].includes(url.protocol)
+      || url.href === 'about:blank'
+      || ['chrome://newtab/', 'chrome://new-tab-page/'].includes(url.href);
+    return routable ? normalized.selectedWindowIds[0] : null;
   } catch {
     return null;
   }

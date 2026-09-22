@@ -1764,7 +1764,7 @@ test('routes an external web tab when its URL arrives after creation', async () 
   }
 });
 
-test('does not reroute a normal New Tab navigation in an excluded window', async () => {
+test('does not reroute an existing tab navigation in an excluded window', async () => {
   const mainWindowId = 101;
   const meetWindowId = 102;
   const existingTab = {
@@ -1828,7 +1828,8 @@ test('does not reroute a normal New Tab navigation in an excluded window', async
 
   try {
     const worker = await import('../background.js?window-policy=keep-excluded-navigation');
-    await worker.TabBundlrBackground.processCreatedTab({ ...existingTab });
+    await chrome.storage.local.set({ tabBundlrEnabled: true });
+    // No creation event: freezing must never sweep existing tabs on navigation.
     existingTab.url = 'https://example.com/after';
     delete existingTab.pendingUrl;
     await worker.TabBundlrBackground.processUpdatedTab({ url: existingTab.url }, { ...existingTab });

@@ -120,6 +120,15 @@ const freshExternalGroupTabs = new Map();
 const pendingFreshExternalGroups = new Map();
 const pendingNavigationCompletions = new Map();
 const pausedWindowIds = new Set();
+const UNFROZEN_WINDOW_IDS_STORAGE_KEY = 'unfrozenWindowIds';
+const unfrozenWindowIds = new Set();
+let freezeStateWrite = Promise.resolve();
+const freezeStateReady = chrome.storage.session.get(UNFROZEN_WINDOW_IDS_STORAGE_KEY)
+  .then((stored) => {
+    const ids = stored[UNFROZEN_WINDOW_IDS_STORAGE_KEY];
+    if (Array.isArray(ids)) ids.filter(Number.isInteger).forEach((id) => unfrozenWindowIds.add(id));
+  })
+  .catch(() => {});
 const ignoredTabActivationTargets = new Map();
 let windowAutomationPolicy = normalizeWindowAutomationPolicy();
 let tabActivationHistory = {};
@@ -406,16 +415,50 @@ async function isWindowPaused(windowId) {
 }
 
 async function getWindowAutomationState(windowId) {
-  await Promise.all([pausedWindowIdsReady, windowAutomationPolicyReady]);
+  await Promise.all([pausedWindowIdsReady, windowAutomationPolicyReady, freezeStateReady]);
   const normalizedWindowId = Number(windowId);
   const manuallyPaused = pausedWindowIds.has(normalizedWindowId);
   const policyAllowed = windowAllowedByPolicy(normalizedWindowId, windowAutomationPolicy);
   return {
     manuallyPaused,
     policyAllowed,
+    windowFrozen: !unfrozenWindowIds.has(normalizedWindowId),
     windowPaused: manuallyPaused || !policyAllowed,
     windowPauseReason: manuallyPaused ? 'manual' : policyAllowed ? null : 'not-selected',
   };
+}
+
+function setWindowFrozen(windowId, frozen) {
+  const id = Number(windowId);
+  const operation = freezeStateWrite.then(async () => {
+    await freezeStateReady;
+    if (!Number.isInteger(id) || id < 0) throw new Error('Choose a valid window.');
+    const next = new Set(unfrozenWindowIds);
+    if (frozen) next.delete(id);
+    else next.add(id);
+    await chrome.storage.session.set({ [UNFROZEN_WINDOW_IDS_STORAGE_KEY]: [...next] });
+    unfrozenWindowIds.clear();
+    next.forEach((value) => unfrozenWindowIds.add(value));
+    // Only future tab creations should respond to a toggle.
+    for (const [tabId, candidate] of pendingExternalTabRoutes) {
+      if (candidate.sourceWindowId === id) pendingExternalTabRoutes.delete(tabId);
+    }
+    for (const [tabId, candidate] of freshExternalGroupTabs) {
+      if (candidate.sourceWindowId === id) freshExternalGroupTabs.delete(tabId);
+    }
+    return { ok: true, message: frozen ? 'Window frozen. Existing tabs stay here.' : 'New tabs can stay in this window.' };
+  });
+  freezeStateWrite = operation.catch(() => {});
+  return operation;
+}
+
+async function frozenWindowRoutingPolicy(windowId) {
+  const state = await getWindowAutomationState(windowId);
+  if (!state.windowPaused || !state.windowFrozen) return null;
+  if (windowAutomationPolicy.mode === 'selected') return windowAutomationPolicy;
+  const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+  const destinations = windows.filter((window) => Number(window.id) !== windowId && !pausedWindowIds.has(Number(window.id)));
+  return normalizeWindowAutomationPolicy('selected', destinations.map((window) => window.id));
 }
 
 async function setWindowAutomationPolicy(mode, selectedWindowIds) {
@@ -1653,9 +1696,9 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
     && pendingRoute.expiresAt > now();
   if (pendingRoute && !pendingRouteIsCurrent) pendingExternalTabRoutes.delete(tabId);
   if (requirePending && !pendingRouteIsCurrent) return false;
-  if (windowAutomationPolicy.mode !== 'selected'
-    || windowAutomationPolicy.selectedWindowIds.length !== 1
-    || windowAutomationPolicy.selectedWindowIds.includes(sourceWindowId)) {
+  const routingPolicy = await frozenWindowRoutingPolicy(sourceWindowId);
+  if (!routingPolicy || routingPolicy.selectedWindowIds.length !== 1
+    || routingPolicy.selectedWindowIds.includes(sourceWindowId)) {
     pendingExternalTabRoutes.delete(tabId);
     return false;
   }
@@ -1664,11 +1707,10 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   if (rememberPending && !tab?.pinned && sourceWindowAlreadyExisted) {
     rememberFreshExternalGroupTab(tabId, sourceWindowId);
   }
-  const destinationWindowId = externalTabDestinationWindowId(tab, sourceTabs.length, windowAutomationPolicy);
+  const destinationWindowId = externalTabDestinationWindowId(tab, sourceTabs.length, routingPolicy);
   if (destinationWindowId === null) {
     const hasNoUrl = !String(tab?.pendingUrl || tab?.url || '').trim();
-    const hasNoOpener = tab?.openerTabId === undefined || Number(tab.openerTabId) === -1;
-    if (rememberPending && hasNoUrl && hasNoOpener && !tab?.pinned && sourceWindowAlreadyExisted) {
+    if (rememberPending && hasNoUrl && !tab?.pinned && sourceWindowAlreadyExisted) {
       pendingExternalTabRoutes.set(tabId, {
         sourceWindowId,
         expiresAt: now() + EXTERNAL_TAB_ROUTE_CANDIDATE_TTL_MS,
@@ -1684,6 +1726,7 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   if (!settings.enabled) return false;
   const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
   if (!windows.some((window) => Number(window.id) === destinationWindowId)) return false;
+  if (unfrozenWindowIds.has(sourceWindowId) || detachedTabOrigins.has(tabId)) return false;
   try {
     await chrome.tabs.move(tab.id, { windowId: destinationWindowId, index: -1 });
     if (tab.active) {
@@ -1697,7 +1740,7 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
 }
 
 async function processCreatedGroup(group, { rememberPending = true, requirePending = false } = {}) {
-  await Promise.all([pausedWindowIdsReady, windowAutomationPolicyReady]);
+  await Promise.all([pausedWindowIdsReady, windowAutomationPolicyReady, freezeStateReady]);
   const groupId = Number(group?.id);
   const sourceWindowId = Number(group?.windowId);
   const pendingGroup = pendingFreshExternalGroups.get(groupId);
@@ -1707,6 +1750,7 @@ async function processCreatedGroup(group, { rememberPending = true, requirePendi
   if (pendingGroup && !pendingGroupIsCurrent) pendingFreshExternalGroups.delete(groupId);
   if (requirePending && !pendingGroupIsCurrent) return false;
   if (!Number.isInteger(groupId)
+    || unfrozenWindowIds.has(sourceWindowId)
     || !Number.isInteger(sourceWindowId)
     || windowAutomationPolicy.mode !== 'selected'
     || windowAutomationPolicy.selectedWindowIds.length !== 1
@@ -3102,6 +3146,7 @@ async function statusForPopup(requestedWindowId) {
     windowId,
     windowPaused,
     windowPauseReason,
+    windowFrozen: windowAutomationState.windowFrozen,
     manuallyPaused,
     policyAllowed,
     enabled: settings.enabled,
@@ -3280,6 +3325,7 @@ async function processAttachedTab(tabId, attachInfo) {
 
 async function forgetWindowAutomationState(windowId) {
   const normalizedWindowId = Number(windowId);
+  await setWindowFrozen(normalizedWindowId, true);
   await Promise.all([pausedWindowIdsReady, windowAutomationPolicyReady]);
   const removedWindowWasSelected = windowAutomationPolicy.selectedWindowIds.includes(normalizedWindowId);
   pausedWindowIds.delete(normalizedWindowId);
@@ -3454,6 +3500,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .catch((error) => sendResponse({ ok: false, message: error.message }));
     return true;
   }
+  if (message?.type === 'SET_WINDOW_FROZEN') {
+    setWindowFrozen(message.windowId, message.frozen === true)
+      .then(sendResponse)
+      .catch((error) => sendResponse({ ok: false, message: error.message }));
+    return true;
+  }
   if (message?.type === 'SET_PERSISTENT_HOME_BASE') {
     setActiveTabPersistentHomeBase(message.windowId, message.enabled === true)
       .then((result) => sendResponse(result))
@@ -3574,5 +3626,6 @@ export const TabBundlrBackground = Object.freeze({
   processUpdatedTab,
   reconcileManagedGroupTypeSettings,
   statusForPopup,
+  setWindowFrozen,
   syncExistingStoryTabs,
 });

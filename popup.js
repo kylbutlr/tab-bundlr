@@ -318,8 +318,8 @@ function renderCurrentWorkspace(response) {
     badge.textContent = 'Not sorting';
     const detail = document.createElement('small');
     detail.textContent = excludedBySelection
-      ? 'Tabs in this window stay where you put them. Add this window in Settings when you want Tab Bundlr to organize it.'
-      : 'Tabs in this window stay where you put them. Resume when you want Tab Bundlr to organize this window again.';
+      ? 'Existing tabs stay here. Add this window in Settings to organize it.'
+      : 'Existing tabs stay here. Resume to organize this window again.';
     copy.append(title, badge, detail);
     currentWorkspace.append(copy);
     const actions = document.createElement('div');
@@ -336,6 +336,39 @@ function renderCurrentWorkspace(response) {
         await refresh({ preserveStatus: true });
       }));
     currentWorkspace.append(actions);
+    const freezeLabel = document.createElement('label');
+    freezeLabel.className = 'window-freeze';
+    const freezeToggle = document.createElement('input');
+    freezeToggle.type = 'checkbox';
+    freezeToggle.checked = response.windowFrozen !== false;
+    freezeToggle.setAttribute('role', 'switch');
+    freezeToggle.setAttribute('aria-describedby', 'window-freeze-help');
+    const freezeText = document.createElement('span');
+    freezeText.textContent = 'Freeze this window';
+    freezeLabel.append(freezeToggle, freezeText);
+    const freezeHelp = document.createElement('p');
+    freezeHelp.id = 'window-freeze-help';
+    freezeHelp.className = 'window-freeze-help';
+    freezeHelp.textContent = freezeToggle.checked
+      ? 'On: new tabs go to your main managed window. Existing tabs stay here. Requires automation on and one available managed window.'
+      : 'Off: new tabs can stay in this window. Tab organization stays off.';
+    freezeToggle.addEventListener('change', async () => {
+      freezeToggle.disabled = true;
+      try {
+        const result = await chrome.runtime.sendMessage({
+          type: 'SET_WINDOW_FROZEN', windowId: response.windowId, frozen: freezeToggle.checked,
+        });
+        if (!result?.ok) throw new Error(result?.message || 'Could not save. Try again.');
+        showStatus(result.message, 'success');
+        await refresh({ preserveStatus: true });
+      } catch (error) {
+        freezeToggle.checked = response.windowFrozen !== false;
+        showStatus(error.message || 'Could not save. Try again.', 'error');
+      } finally {
+        freezeToggle.disabled = false;
+      }
+    });
+    currentWorkspace.append(freezeLabel, freezeHelp);
     return;
   }
   const copy = document.createElement('div');

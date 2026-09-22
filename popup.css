@@ -111,3 +111,8 @@ dialog select, dialog input { width: 100%; min-height: 36px; padding: 0 9px; bor
 .dialog-status { min-height: 16px; margin: 8px 0 0; color: var(--accent); }
 .dialog-warning { min-height: 16px; margin: 8px 0 0; color: #f2c46f; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 14px; }
+.window-freeze { display: flex; align-items: center; gap: 8px; min-height: 34px; margin-top: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.window-freeze input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.window-freeze input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.window-freeze input:disabled { cursor: wait; opacity: .5; }
+.window-freeze-help { margin: 2px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }

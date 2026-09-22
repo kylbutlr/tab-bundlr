@@ -89,6 +89,8 @@ The review page groups exact normalized URL duplicates and lists probably stale 
 
 Each window can be paused independently. A detached tab that becomes a one-tab window causes that destination window to pause, protecting presentation or meeting windows. Settings can also restrict automation to selected Chrome windows.
 
+Paused and excluded windows default to **Freeze this window: On**, available below the popup's window-management action. With automatic bundling enabled and exactly one available managed destination, subsequent web links (including links opened from Meet) and New Tab tabs are moved to that main window. Active tabs focus the main window; background tabs do not. The first tab in a new window, dragged tabs, pinned tabs, and existing tabs are left alone. Turn Freeze off to let new tabs stay in the secondary window without enabling organization there. This choice survives service-worker restarts for the current browser session and resets when the window closes. If there is no unambiguous managed destination, tabs stay in place.
+
 ### Undo and previous tab
 
 The latest 20 move activities are stored locally and can be undone individually. The configurable Previous Tab command either toggles between the last two tabs or walks backward through activation history in the current window.
