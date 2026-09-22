@@ -340,29 +340,29 @@ function renderCurrentWorkspace(response) {
     freezeLabel.className = 'window-freeze';
     const freezeToggle = document.createElement('input');
     freezeToggle.type = 'checkbox';
-    freezeToggle.checked = response.windowFrozen !== false;
+    freezeToggle.checked = response.windowFrozen === false;
     freezeToggle.setAttribute('role', 'switch');
     freezeToggle.setAttribute('aria-describedby', 'window-freeze-help');
     const freezeText = document.createElement('span');
-    freezeText.textContent = 'Freeze this window';
+    freezeText.textContent = 'Allow new tabs in this window';
     freezeLabel.append(freezeToggle, freezeText);
     const freezeHelp = document.createElement('p');
     freezeHelp.id = 'window-freeze-help';
     freezeHelp.className = 'window-freeze-help';
     freezeHelp.textContent = freezeToggle.checked
-      ? 'On: new tabs go to your main managed window. Existing tabs stay here. Requires automation on and one available managed window.'
-      : 'Off: new tabs can stay in this window. Tab organization stays off.';
+      ? 'On: new tabs can stay here. Tab organization stays off.'
+      : 'Off by default: new tabs go to your main managed window when one is available. Tabs you drag here stay here.';
     freezeToggle.addEventListener('change', async () => {
       freezeToggle.disabled = true;
       try {
         const result = await chrome.runtime.sendMessage({
-          type: 'SET_WINDOW_FROZEN', windowId: response.windowId, frozen: freezeToggle.checked,
+          type: 'SET_WINDOW_FROZEN', windowId: response.windowId, frozen: !freezeToggle.checked,
         });
         if (!result?.ok) throw new Error(result?.message || 'Could not save. Try again.');
         showStatus(result.message, 'success');
         await refresh({ preserveStatus: true });
       } catch (error) {
-        freezeToggle.checked = response.windowFrozen !== false;
+        freezeToggle.checked = response.windowFrozen === false;
         showStatus(error.message || 'Could not save. Try again.', 'error');
       } finally {
         freezeToggle.disabled = false;

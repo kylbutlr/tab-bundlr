@@ -116,6 +116,7 @@ const inFlightGroupMoves = new Set();
 const groupOrganizationRequests = new Map();
 const detachedTabOrigins = new Map();
 const pendingExternalTabRoutes = new Map();
+const tabCreationRequests = new Map();
 const freshExternalGroupTabs = new Map();
 const pendingFreshExternalGroups = new Map();
 const pendingNavigationCompletions = new Map();
@@ -446,7 +447,7 @@ function setWindowFrozen(windowId, frozen) {
     for (const [tabId, candidate] of freshExternalGroupTabs) {
       if (candidate.sourceWindowId === id) freshExternalGroupTabs.delete(tabId);
     }
-    return { ok: true, message: frozen ? 'Window frozen. Existing tabs stay here.' : 'New tabs can stay in this window.' };
+    return { ok: true, message: frozen ? 'New tabs will be sent to your main managed window when available. Tabs you drag here stay here.' : 'New tabs can stay in this window.' };
   });
   freezeStateWrite = operation.catch(() => {});
   return operation;
@@ -1630,7 +1631,18 @@ async function setActiveTabPersistentHomeBase(windowId, enabled) {
   return { ok: true, message: 'This URL is no longer kept as a home base.' };
 }
 
-async function processCreatedTab(tab) {
+function processCreatedTab(tab) {
+  const tabId = Number(tab?.id);
+  const existing = tabCreationRequests.get(tabId);
+  if (existing) return existing;
+  const request = processNewTab(tab).finally(() => {
+    if (tabCreationRequests.get(tabId) === request) tabCreationRequests.delete(tabId);
+  });
+  tabCreationRequests.set(tabId, request);
+  return request;
+}
+
+async function processNewTab(tab) {
   if (!tab || tab.id === undefined || tab.pinned) return;
   const tabId = Number(tab.id);
   await windowAutomationPolicyReady;
@@ -1722,21 +1734,32 @@ async function routeExternalTabToSelectedWindow(tab, { rememberPending = false, 
   }
   pendingExternalTabRoutes.delete(tabId);
   if (pausedWindowIds.has(destinationWindowId)) return false;
-  const settings = await getSettings();
-  if (!settings.enabled) return false;
   const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
   if (!windows.some((window) => Number(window.id) === destinationWindowId)) return false;
   if (unfrozenWindowIds.has(sourceWindowId) || detachedTabOrigins.has(tabId)) return false;
   try {
     await chrome.tabs.move(tab.id, { windowId: destinationWindowId, index: -1 });
+  } catch (error) {
+    // Chrome can briefly reject edits around a drag. Retry only this newly
+    // created tab on a subsequent navigation event, never sweep existing tabs.
+    const attempts = (pendingRoute?.attempts || 0) + 1;
+    if (/cannot be edited right now|dragging a tab/i.test(error?.message || '') && attempts < 3) {
+      pendingExternalTabRoutes.set(tabId, {
+        sourceWindowId, attempts, expiresAt: pendingRoute?.expiresAt || now() + EXTERNAL_TAB_ROUTE_CANDIDATE_TTL_MS,
+      });
+    }
+    return false;
+  }
+  try {
     if (tab.active) {
       await chrome.windows.update(destinationWindowId, { focused: true });
       await chrome.tabs.update(tab.id, { active: true });
     }
     return true;
   } catch {
-    return false;
+    // The move succeeded even if Chrome cannot focus the destination anymore.
   }
+  return true;
 }
 
 async function processCreatedGroup(group, { rememberPending = true, requirePending = false } = {}) {
@@ -1775,8 +1798,6 @@ async function processCreatedGroup(group, { rememberPending = true, requirePendi
     pendingFreshExternalGroups.delete(groupId);
     return false;
   }
-  const settings = await getSettings();
-  if (!settings.enabled) return false;
   const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
   if (!windows.some((window) => Number(window.id) === destinationWindowId)) return false;
   groupTabs.forEach((tab) => freshExternalGroupTabs.delete(Number(tab.id)));
@@ -3222,7 +3243,10 @@ async function statusForPopup(requestedWindowId) {
 }
 
 async function processRelevantTabUpdate(changeInfo, tab) {
-  if (changeInfo.url && await routeExternalTabToSelectedWindow(tab, { requirePending: true })) {
+  // onUpdated may run while onCreated is still awaiting Chrome queries.
+  await tabCreationRequests.get(Number(tab?.id))?.catch(() => {});
+  if ((changeInfo.url || changeInfo.status === 'complete')
+    && await routeExternalTabToSelectedWindow(tab, { requirePending: true })) {
     return { status: 'routed-to-selected-window' };
   }
   const updatedGroupId = Number(changeInfo.groupId);

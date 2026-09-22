@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 const event = () => ({ addListener() {} });
+const capturedEvent = () => ({ addListener(listener) { this.fire = listener; } });
 const area = (values) => ({
   async get(keys) {
     return Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map((key) => [key, values[key]]));
@@ -9,6 +10,90 @@ const area = (values) => ({
   async set(next) { Object.assign(values, next); },
   async remove() {},
 });
+
+for (const scenario of [
+  { name: 'automatic bundling on', automaticBundling: true },
+  { name: 'automatic bundling off', automaticBundling: false },
+  { name: 'URL update overlaps creation', automaticBundling: true, overlap: true },
+  { name: 'Chrome temporarily rejects move after drag', automaticBundling: true, rejectMove: true },
+  { name: 'allowing tabs cancels a failed move retry', automaticBundling: true, rejectMove: true, allowAfterFailure: true },
+  { name: 'repeated Chrome rejection stops after three attempts', automaticBundling: true, rejectMove: true, rejectAlways: true },
+]) {
+  const { automaticBundling, overlap, rejectMove } = scenario;
+  test(`external link after dragging another tab into Meet routes away (${scenario.name})`, async () => {
+    const session = { sessionReconciled: true, persistentHomeBasesReconciled: true, windowAutomationMode: 'selected', selectedWindowIds: [1] };
+    const detached = capturedEvent();
+    const attached = capturedEvent();
+    const moved = [];
+    const focused = [];
+    const meet = { id: 20, windowId: 2, index: 0, url: 'https://meet.google.com/test' };
+    const dragged = { id: 30, windowId: 2, index: 1, url: 'https://example.com/dragged' };
+    const external = { id: 31, windowId: 2, index: 2, active: true, pendingUrl: 'https://example.com/external' };
+    let releaseQuery;
+    let queryStarted;
+    const queryReady = new Promise((resolve) => { queryStarted = resolve; });
+    let holdQuery = false;
+    let moveAttempts = 0;
+    globalThis.chrome = {
+      storage: { local: area({ tabBundlrEnabled: automaticBundling }), session: area(session), onChanged: event() },
+      tabs: {
+        async query({ windowId } = {}) {
+          if (windowId === 2 && holdQuery) {
+            holdQuery = false;
+            queryStarted();
+            await new Promise((resolve) => { releaseQuery = resolve; });
+          }
+          return windowId === 2 ? [meet, dragged, external] : [];
+        },
+        async move(id, options) {
+          moveAttempts += 1;
+          if (rejectMove && (moveAttempts === 1 || scenario.rejectAlways)) throw new Error('Tabs cannot be edited right now (user may be dragging a tab).');
+          moved.push({ id, ...options });
+        },
+        async update() {},
+        onCreated: event(), onUpdated: event(), onDetached: detached, onAttached: attached, onRemoved: event(),
+      },
+      tabGroups: { async query() { return []; }, onCreated: event(), onMoved: event() },
+      windows: { async getAll() { return [{ id: 1 }, { id: 2, focused: true }]; }, async update(id) { focused.push(id); }, onRemoved: event() },
+      runtime: { onMessage: event(), openOptionsPage() {} },
+    };
+    try {
+      const { TabBundlrBackground: worker } = await import(`../background.js?drag-then-external=${encodeURIComponent(scenario.name)}`);
+      detached.fire(dragged.id, { oldWindowId: 1 });
+      attached.fire(dragged.id, { newWindowId: 2, newPosition: 1 });
+      await new Promise(setImmediate);
+      assert.deepEqual(moved, [], 'manually dragged tab stays in Meet');
+      if (overlap) {
+        holdQuery = true;
+        const creating = worker.processCreatedTab({ ...external, pendingUrl: '' });
+        await queryReady;
+        const updating = worker.processUpdatedTab({ url: external.pendingUrl }, { ...external, url: external.pendingUrl });
+        await new Promise(setImmediate);
+        releaseQuery();
+        await Promise.all([creating, updating]);
+      } else {
+        await worker.processCreatedTab(external);
+      }
+      if (scenario.allowAfterFailure) await worker.setWindowFrozen(2, false);
+      if (rejectMove) await worker.processUpdatedTab({ status: 'complete' }, { ...external, url: external.pendingUrl });
+      if (scenario.rejectAlways) {
+        for (let i = 0; i < 5; i += 1) await worker.processUpdatedTab({ status: 'complete' }, { ...external, url: external.pendingUrl });
+        assert.equal(moveAttempts, 3, 'retry work is bounded');
+        assert.deepEqual(moved, []);
+        return;
+      }
+      if (scenario.allowAfterFailure) {
+        assert.equal(moveAttempts, 1);
+        assert.deepEqual(moved, []);
+        return;
+      }
+      assert.deepEqual(moved, [{ id: external.id, windowId: 1, index: -1 }], 'external link must leave Meet even after a manual drag');
+      assert.deepEqual(focused, [1]);
+    } finally {
+      delete globalThis.chrome;
+    }
+  });
+}
 
 test('freeze defaults, opt-out, worker restart, safe targets and future-tab-only routing', async () => {
   const session = { sessionReconciled: true, persistentHomeBasesReconciled: true, windowAutomationMode: 'selected', selectedWindowIds: [1] };
