@@ -172,3 +172,9 @@ Start with the [support guide](docs/support.md) and [troubleshooting guide](docs
 Tab Bundlr is available under the [MIT License](LICENSE).
 
 Current styling source: [App Stylr Evening adoption](docs/app-stylr-evening-adoption.md).
+
+### Check unattended requests
+
+In Settings, open **Check background requests**. Click **Record browsing**, use Chrome normally for about ten minutes, then click **Mark idle** before leaving Chrome open and the Mac awake for at least thirty minutes. Return, click **Stop**, then **Export report**. The report includes a plain-language assessment and local counts for each period; share it for help interpreting the triggers. This diagnostic does not connect Tab Bundlr to App Switchr.
+
+Collection is opt-in, makes no additional network requests, and records no URLs or credentials. Counts cover Tab Bundlr's application-level optional-service requests, not all browser traffic or billable units. Cache hits do not count as requests. Marked idle is a user label, not automatic activity detection. The Mac must remain awake and Chrome open; zero during sleep is not proof of quiet background behavior. Recording is bounded to 24 hours, 12 periods and 10,000 starts. Clear recording removes the saved sample.

@@ -1,3 +1,4 @@
+import { createTrafficDiagnostic } from './traffic-diagnostic.js';
 import {
   ACTIVITY_HISTORY_STORAGE_KEY,
   ACTIVATE_OPENED_TABS_STORAGE_KEY,
@@ -810,7 +811,9 @@ async function pruneContexts(openTabs = null) {
   ));
 }
 
-async function cachedWorkspaceSourceResolution(match, sourceSecrets) {
+const trafficDiagnostic = createTrafficDiagnostic(chrome.storage.local);
+
+async function cachedWorkspaceSourceResolution(match, sourceSecrets, reason) {
   const secrets = sourceSecrets?.[match.source.id] || {};
   const key = `${match.source.id}:${match.route.id}:${JSON.stringify(match.captures)}`;
   const cached = workspaceSourceCache.get(key);
@@ -818,7 +821,7 @@ async function cachedWorkspaceSourceResolution(match, sourceSecrets) {
     if (cached.error && cached.errorExpiresAt > now()) throw new Error(cached.error);
     if (cached.result) return cached.result;
   }
-  const request = resolveWorkspaceSourceMatch(match, secrets)
+  const request = resolveWorkspaceSourceMatch(match, secrets, trafficDiagnostic.wrapFetch(reason))
     .then((result) => {
       workspaceSourceCache.set(key, { result, expiresAt: now() + CACHE_TTL_MS });
       return result;
@@ -1266,7 +1269,7 @@ async function processWorkspaceSourceTab(tab, reason = 'workspace-source', {
   if (!managedGroupTypeIsEnabled(await getManagedGroupTypeEnabled(), workspaceType)) {
     return { status: 'category-disabled', workspaceType };
   }
-  const result = await cachedWorkspaceSourceResolution(match, settings.sourceSecrets);
+  const result = await cachedWorkspaceSourceResolution(match, settings.sourceSecrets, reason);
   if (result.status !== 'resolved') return result;
   if (workspaceType === 'client') {
     await rememberSavedClientGroups([{ epicId: result.workspaceId, epicName: result.workspaceName }]);
@@ -3382,6 +3385,11 @@ chrome.commands?.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === 'REQUEST_DIAGNOSTIC') {
+    trafficDiagnostic.command(message.action).then((report) => sendResponse({ ok: true, report }))
+      .catch((error) => sendResponse({ ok: false, message: error.message }));
+    return true;
+  }
   if (message?.type === 'GET_WINDOW_AUTOMATION_POLICY') {
     getWindowAutomationPolicyData().then((result) => sendResponse(result)).catch((error) => sendResponse({ ok: false, message: error.message }));
     return true;

@@ -237,6 +237,25 @@
         <p id="backup-status" class="status" role="status" aria-live="polite"></p>
       </section>
 
+      <section class="card" id="request-diagnostic" aria-labelledby="request-diagnostic-title">
+        <h2 id="request-diagnostic-title">Check background requests</h2>
+        <p class="help">Measure Tab Bundlr's optional service requests during browsing and idle time. No URLs, credentials, tab titles or request contents are saved. Nothing is uploaded.</p>
+        <p class="help">Record browsing for 10 minutes, then mark Idle before leaving Chrome open and the Mac awake for at least 30 minutes. Idle is your label, not automatic inactivity detection. Recording stops after 24 hours.</p>
+        <div class="actions">
+          <button type="button" data-traffic="browsing">Record browsing</button>
+          <button type="button" data-traffic="idle" class="secondary">Mark idle</button>
+          <button type="button" data-traffic="stop" class="secondary">Stop</button>
+          <button type="button" data-traffic="get" class="secondary">Refresh report</button>
+        </div>
+        <p id="traffic-status" class="status" role="status" aria-live="polite">Loading diagnostic…</p>
+        <p id="traffic-summary" class="help"></p>
+        <div id="traffic-periods"></div>
+        <div class="actions">
+          <button id="traffic-export" type="button" class="secondary">Export report</button>
+          <button type="button" data-traffic="clear" class="secondary">Clear recording</button>
+        </div>
+        <p class="help">Counts are application requests, including failures, not billing units. Cache hits and other extensions are excluded. Browser shutdown or interrupted storage can lose records. Reports stay on this device until cleared. Export before clearing if you want help reviewing them.</p>
+      </section>
       <p class="help">Tab Bundlr has no hosted account, analytics, advertising, or cloud synchronization. <a href="help.html#privacy">Read the complete privacy explanation</a>.</p>
     </main>
     <dialog id="source-permission-dialog" aria-labelledby="source-permission-title" aria-describedby="source-permission-copy">
@@ -253,5 +272,6 @@
       </form>
     </dialog>
     <script type="module" src="options.js"></script>
+    <script type="module" src="traffic-options.js"></script>
   </body>
 </html>

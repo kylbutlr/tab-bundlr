@@ -15,6 +15,8 @@ const files = [
   'core.js',
   'settings.js',
   'sources.js',
+  'traffic-diagnostic.js',
+  'traffic-options.js',
   'guidance.js',
   'help.html',
   'help.css',

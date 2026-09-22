@@ -29,3 +29,7 @@ Remove individual rules and sources from Settings, or remove the extension throu
 ## In-product explanation
 
 Open **Help** from the popup or use the **Privacy** link in Settings to see the same data flow beside the controls that use it. Before an optional connection first requests service access, Tab Bundlr shows the exact HTTPS addresses and explains how its saved credential will be used.
+
+## Optional request diagnostic
+
+When explicitly started in Settings, Tab Bundlr records local request counts, timestamps, fixed trigger labels and failure totals for marked browsing and idle periods. No URLs, credentials, headers, bodies, tab titles or provider error messages are recorded. Collection lasts at most 24 hours, with at most 12 periods and 10,000 counted requests. Data remains in local extension storage until Clear recording or extension removal. Export report creates a local JSON file only when requested; it does not upload it. Browser shutdown, sleep and interrupted storage limit what the sample can prove.
