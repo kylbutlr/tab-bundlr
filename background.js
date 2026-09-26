@@ -3491,7 +3491,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return false;
   }
   if (message?.type === 'POPUP_TIMING') {
-    runtimeDiagnostic.record('popup-render', { messageMs: message.messageMs, renderMs: message.renderMs });
+    const event = ['popup-timeout', 'popup-error'].includes(message.event) ? message.event : 'popup-render';
+    runtimeDiagnostic.record(event, message);
     sendResponse({ ok: true });
     return false;
   }
@@ -3509,7 +3510,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
   if (message?.type === 'GET_STATUS') {
-    statusForPopup(message.windowId).then((result) => sendResponse({ ok: true, ...result })).catch((error) => sendResponse({ ok: false, error: error.message }));
+    const receivedAt = performance.now();
+    const requestDeliveryMs = Number.isFinite(message.popupSentAt)
+      ? Math.max(0, Date.now() - message.popupSentAt) : undefined;
+    runtimeDiagnostic.record('popup-received', { requestDeliveryMs });
+    statusForPopup(message.windowId).then((result) => sendResponse({ ok: true, ...result,
+      popupTiming: { requestDeliveryMs, workerMs: performance.now() - receivedAt, responseSentAt: Date.now() },
+    })).catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   }
   if (message?.type === 'GET_REVIEW_DATA') {

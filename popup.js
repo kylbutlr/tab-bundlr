@@ -1,4 +1,5 @@
 import { contextRuleActionAvailability, trainingPatternForUrl } from './core.js';
+import { readPopupState, reportPopupTiming } from './popup-request.js';
 import {
   FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY,
   shouldShowFirstUseGuidance,
@@ -495,11 +496,17 @@ function renderReviewTabs(response) {
 }
 
 async function refresh({ preserveStatus = false } = {}) {
-  const refreshStarted = performance.now();
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const response = await chrome.runtime.sendMessage({ type: 'GET_STATUS', windowId: activeTab?.windowId });
-  const responseAt = performance.now();
-  if (!response?.ok) throw new Error(response?.error || 'Could not read Tab Bundlr status.');
+  let data;
+  try {
+    data = await readPopupState(chrome, FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY);
+  } catch (error) {
+    statePill.textContent = error.code === 'POPUP_TIMEOUT' ? 'Timed out' : 'Unavailable';
+    statePill.className = 'pill pill-off';
+    showStatus(error.message || 'Could not read this window. Close and reopen the popup to retry.', 'error');
+    return;
+  }
+  const { response, storedGuidance, timings } = data;
+  const renderStarted = performance.now();
   const automaticActive = response.enabled && !response.windowPaused;
   statePill.textContent = response.windowPauseReason === 'not-selected'
     ? 'Window excluded'
@@ -512,7 +519,6 @@ async function refresh({ preserveStatus = false } = {}) {
       ? `${response.focusGroupCount || 0} Focus Group${response.focusGroupCount === 1 ? '' : 's'} · ${response.smartGroupCount || 0} Smart Group${response.smartGroupCount === 1 ? '' : 's'} · ${response.trainedRuleCount || 0} saved link${response.trainedRuleCount === 1 ? '' : 's'}.`
       : 'Manual mode is on. Fix and Organize remain available.');
   }
-  const storedGuidance = await chrome.storage.local.get(FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY);
   const showGuide = shouldShowFirstUseGuidance(
     storedGuidance[FIRST_USE_GUIDANCE_DISMISSED_STORAGE_KEY],
     response,
@@ -557,7 +563,7 @@ async function refresh({ preserveStatus = false } = {}) {
     : 'There is no recent Tab Bundlr move to undo.';
   fixWindow.disabled = response.windowPaused;
   organizeWindow.disabled = response.windowPaused;
-  void chrome.runtime.sendMessage({ type: 'POPUP_TIMING', messageMs: responseAt - refreshStarted, renderMs: performance.now() - responseAt }).catch(() => {});
+  reportPopupTiming(chrome, { ...timings, renderMs: performance.now() - renderStarted });
 }
 
 undo.addEventListener('click', async () => {

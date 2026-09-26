@@ -29,6 +29,7 @@ const files = [
   'popup.html',
   'popup.css',
   'popup.js',
+  'popup-request.js',
   'review.html',
   'review.css',
   'review.js',

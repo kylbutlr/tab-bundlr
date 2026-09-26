@@ -2,6 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRuntimeDiagnostic } from '../runtime-diagnostic.js';
 
+test('popup diagnostics retain only allowlisted phases and finite timings', () => {
+  const diagnostic = createRuntimeDiagnostic();
+  diagnostic.record('popup-timeout', { stage: 'background', tabQueryMs: 20, durationMs: 5000,
+    backgroundRoundTripMs: Infinity, error: 'private', popupSentAt: 123 });
+  diagnostic.record('popup-error', { stage: 'private' });
+  const [timeout, error] = diagnostic.command('get').events;
+  assert.equal(timeout.stage, 'background');
+  assert.equal(timeout.tabQueryMs, 20);
+  for (const field of ['backgroundRoundTripMs', 'error', 'popupSentAt']) assert.equal(field in timeout, false);
+  assert.equal('stage' in error, false);
+});
+
 test('runtime capture is bounded, expiring and excludes browsing content and arbitrary errors', () => {
   let at = 1000;
   const diagnostic = createRuntimeDiagnostic(() => at);
