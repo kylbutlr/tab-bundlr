@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "id": "shortcut",
+  "name": "Shortcut",
+  "enabled": false,
+  "precedence": "before-rules",
+  "permissionOrigins": [
+    "https://api.app.shortcut.com/*"
+  ],
+  "credentials": [
+    {
+      "id": "apiToken",
+      "label": "API token",
+      "type": "header",
+      "headerName": "Shortcut-Token"
+    }
+  ],
+  "routes": [
+    {
+      "id": "story",
+      "pagePattern": "https://app.shortcut.com/your-workspace/story/{itemId}",
+      "steps": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.app.shortcut.com/api/v3/stories/{itemId}"
+          },
+          "extract": {
+            "workspaceId": [
+              "epic_id",
+              "epic.id"
+            ],
+            "itemName": [
+              "name",
+              "title"
+            ]
+          }
+        },
+        {
+          "when": [
+            "workspaceId"
+          ],
+          "request": {
+            "method": "GET",
+            "url": "https://api.app.shortcut.com/api/v3/epics/{workspaceId}"
+          },
+          "extract": {
+            "workspaceName": [
+              "name",
+              "title"
+            ]
+          }
+        }
+      ],
+      "placement": {
+        "workspaceId": "{workspaceId}",
+        "workspaceName": "{workspaceName}",
+        "workspaceType": "workspace",
+        "itemId": "{itemId}",
+        "itemName": "{itemName}"
+      }
+    },
+    {
+      "id": "epic",
+      "pagePattern": "https://app.shortcut.com/your-workspace/epic/{workspaceId}",
+      "steps": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.app.shortcut.com/api/v3/epics/{workspaceId}"
+          },
+          "extract": {
+            "workspaceName": [
+              "name",
+              "title"
+            ]
+          }
+        }
+      ],
+      "placement": {
+        "workspaceId": "{workspaceId}",
+        "workspaceName": "{workspaceName}",
+        "workspaceType": "workspace"
+      }
+    },
+    {
+      "id": "iteration",
+      "pagePattern": "https://app.shortcut.com/your-workspace/iteration/{workspaceId}",
+      "steps": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.app.shortcut.com/api/v3/iterations/{workspaceId}"
+          },
+          "extract": {
+            "workspaceName": [
+              "name",
+              "title"
+            ]
+          }
+        }
+      ],
+      "placement": {
+        "workspaceId": "{workspaceId}",
+        "workspaceName": "{workspaceName}",
+        "workspaceType": "collection"
+      }
+    }
+  ]
+}
