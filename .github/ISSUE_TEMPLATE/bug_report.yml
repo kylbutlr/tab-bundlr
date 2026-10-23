@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible Tab Bundlr problem
+body:
+  - type: markdown
+    attributes:
+      value: Do not include API tokens, private URLs, settings exports, or confidential browser data.
+  - type: input
+    id: versions
+    attributes:
+      label: Chrome, operating system, and Tab Bundlr versions
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Relevant settings
+      description: Automatic or manual mode, paused windows, and optional connections. Omit credentials and private URLs.
