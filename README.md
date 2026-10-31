@@ -6,6 +6,12 @@ It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cl
 
 [Report an issue](https://github.com/kylbutlr/tab-bundlr/issues)
 
+## Preview
+
+<img src="docs/images/app-preview.gif" width="640" alt="Tab Bundlr grouping fictional tabs into Fieldnotes, Design system, and Research workspaces in an illustrated vertical browser sidebar">
+
+App preview with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp).
+
 ## Status
 
 Tab Bundlr 1.0.0 is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
