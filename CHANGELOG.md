@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (source candidate)
+
+- Adopt pinned App Stylr v1.4.1 styles, typography and precise geometry.
+- Keep the existing grouping glyph over the neutral Graphite icon tile.
+- Quiet feedback surfaces and retain workspace-specific color meaning.
+- Publication remains pending rendered review and the release checklist.
+
 ## 1.0.0
 
 - Present local and connected destinations through one workspace rule editor.
