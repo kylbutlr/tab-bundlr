@@ -19,6 +19,9 @@ files.set("fonts/LICENSE-GEIST.txt", await readFile(join(upstream, "assets/fonts
 const iconOutput = join(root, "dist/app-stylr-icons");
 execFileSync(process.execPath, [join(upstream, "scripts/generate-icons.mjs"), "--source", join(root, "assets/tab-bundlr-icon.svg"), "--output", iconOutput], { stdio: "pipe", cwd: root });
 for (const size of [16,32,48,128]) files.set(`icons/chrome/icon-${size}.png`, await readFile(join(iconOutput, `chrome/icon-${size}.png`)));
+// The pinned generator renders this 512px PNG directly from the SVG master.
+files.set("icons/chrome/icon-512.png", await readFile(join(iconOutput, "web/icon-512.png")));
+
 for (const [name, content] of files) {
  const target = join(root, name);
  if (check) { if (!(await readFile(target)).equals(content)) throw new Error(`${name} differs from the pinned source; run npm run styles`); }

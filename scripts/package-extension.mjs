@@ -51,6 +51,7 @@ const files = [
   'icons/chrome/icon-32.png',
   'icons/chrome/icon-48.png',
   'icons/chrome/icon-128.png',
+  'icons/chrome/icon-512.png',
 ];
 
 const forbidden = [

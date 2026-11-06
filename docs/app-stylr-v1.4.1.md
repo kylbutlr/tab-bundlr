@@ -15,3 +15,7 @@ The final source suite passed 124 tests with the generated-source check. Local v
 Rendered review covered the popup, rule dialog, desktop and 390px settings, review, help and diagnostics. The actual popup and URL matcher grouped six fictional tabs into three workspaces; Undo restored the fixture state and Escape dismissed the rule dialog. The isolated adapter uses fictional data and does not establish installed-browser or native permission acceptance. Product-scoped automated accessibility checks reported no WCAG A/AA violations in the sampled rendered states.
 
 The [fresh still](images/app-preview.webp), [animation](images/app-preview.gif) and [provenance](images/app-preview.provenance.json) identify the captured source revision, dimensions, hashes and coverage limits. Complete the installed-browser release guide before publication.
+
+## High-resolution icon delivery
+
+The product keeps its original vector glyph and approved Graphite tile. Extension PNGs now include a 512px master export generated directly from the SVG, while the top-level manifest routes the management card to the 128px resource instead of declaring a 48px card image. The 48px PNG remains available to the toolbar action. This corrects delivery and display density without changing product interactions. The rebuilt package passed its source suite and ZIP integrity check. In installed Chromium 151 at 2× density, the Extensions page selected the 128px resource, compared with 48px before the correction. Native stable Chrome/Edge walkthrough results remain separate.
