@@ -10,13 +10,13 @@ It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cl
 
 <img src="docs/images/app-preview.gif" width="640" alt="Tab Bundlr grouping fictional tabs into Fieldnotes, Design system, and Research workspaces in an illustrated vertical browser sidebar">
 
-App preview of the unpublished 1.1.0 refresh candidate with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp). [Capture provenance](docs/images/app-preview.provenance.json).
+App preview of Tab Bundlr 1.1.0 with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp). [Capture provenance](docs/images/app-preview.provenance.json).
 
 ## Status
 
-Source candidate: **1.1.0**, with the App Stylr v1.4.1 refresh. This candidate is not a published download.
+Version **1.1.0** adopts App Stylr v1.4.1. See the [release notes](docs/release-notes-v1.1.0.md) for changes and verification coverage.
 
-Tab Bundlr 1.0.0 is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
+Tab Bundlr is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
 
 ## Highlights
 
@@ -29,7 +29,7 @@ Tab Bundlr 1.0.0 is distributed through [GitHub Releases](https://github.com/kyl
 
 ### Install locally
 
-1. Download the versioned ZIP from [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0), or clone this repository and run `npm run package`.
+1. Download the versioned ZIP from [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases), or clone this repository and run `npm run package`.
 2. Extract the ZIP into a permanent folder. Keep this folder after installation.
 3. Open `chrome://extensions`.
 4. Enable **Developer mode**.

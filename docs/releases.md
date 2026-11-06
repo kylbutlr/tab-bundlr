@@ -2,16 +2,16 @@
 
 Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases). Users install the extracted ZIP using Chrome's **Load unpacked** control and update it manually. Chrome Web Store registration, submission, screenshots, and dashboard disclosures are outside this release's scope.
 
-## Current source candidate
+## Current release
 
-The v1.1.0 App Stylr refresh is a local source candidate. Its versioned ZIP and checksum require fresh verification and separate publication approval. The v1.0.0 notes and accepted verification limits below remain historical evidence, not acceptance of the new candidate.
+Version 1.1.0 applies the App Stylr visual refresh and high-resolution Graphite icons. See [v1.1.0 notes](release-notes-v1.1.0.md) for exact verification coverage and remaining native-browser limits. Historical v1.0.0 evidence below remains specific to that version.
 
 ## Release assets
 
-For version 1.0.0:
+For version 1.1.0:
 
-- `tab-bundlr-1.0.0.zip`: extension runtime, bundled font licenses, and MIT license.
-- `tab-bundlr-1.0.0.sha256`: checksum for the exact published ZIP.
+- `tab-bundlr-1.1.0.zip`: extension runtime, bundled font licenses, and MIT license.
+- `tab-bundlr-1.1.0.sha256`: checksum for the exact published ZIP.
 
 The repository also provides the [installation guide](installation.md), [privacy policy](privacy.md), [support guide](support.md), and [MIT License](../LICENSE). Do not include settings exports, browser profiles, private screenshots, or credentials in release assets.
 

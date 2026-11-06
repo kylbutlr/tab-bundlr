@@ -1,6 +1,6 @@
 # App Stylr v1.4.1 adoption
 
-The source candidate consumes the public [v1.4.1 release](https://github.com/kylbutlr/app-stylr/releases/tag/v1.4.1), source `6fbc524f07ed7aa7db9c8593bf8116b9440937bc`, through the exact HTTPS archive and lockfile. The manifest records Sage, dark, Normal surfaces and Comfortable default spacing. Compact browser chrome remains product-owned.
+The app consumes the public [v1.4.1 release](https://github.com/kylbutlr/app-stylr/releases/tag/v1.4.1), source `6fbc524f07ed7aa7db9c8593bf8116b9440937bc`, through the exact HTTPS archive and lockfile. The manifest records Sage, dark, Normal surfaces and Comfortable default spacing. Compact browser chrome remains product-owned.
 
 The generated adapter owns semantic colors, Geist typography, 4px control/button, 8px card and 12px dialog radii. Shared feedback treatment uses neutral surfaces with semantic text and icons. Preserve the existing product glyph over the palette-independent Graphite tile. Review the icon at 16px before judging larger exports.
 
@@ -10,7 +10,7 @@ Fresh rendered review, capture provenance and installed-browser coverage are rec
 
 ## Local candidate evidence, November 5, 2026
 
-The final source suite passed 124 tests with the generated-source check. Local version 1.1.0 packages passed ZIP integrity checks and include only their runtime allowlists. The candidate is not published.
+The final source suite passed 124 tests with the generated-source check. Local version 1.1.0 packages passed ZIP integrity checks and include only their runtime allowlists. At the time of this capture review, the candidate was not yet published.
 
 Rendered review covered the popup, rule dialog, desktop and 390px settings, review, help and diagnostics. The actual popup and URL matcher grouped six fictional tabs into three workspaces; Undo restored the fixture state and Escape dismissed the rule dialog. The isolated adapter uses fictional data and does not establish installed-browser or native permission acceptance. Product-scoped automated accessibility checks reported no WCAG A/AA violations in the sampled rendered states.
 
