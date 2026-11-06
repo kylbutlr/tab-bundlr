@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-11-06T06:43:35.693Z",
+  "sourceVersion": "1.1.0",
+  "sourceRevision": "12b7aa7a7c53f0be6c8ce173547286b63eafe90e",
+  "releaseStatus": "Unpublished visual-refresh candidate",
+  "appStylrVersion": "1.4.1",
+  "fictionalData": true,
+  "capture": {
+    "width": 1100,
+    "height": 900,
+    "method": "One isolated headless Chrome tab, viewport-only PNG frames of actual owning-repository frontend files."
+  },
+  "animation": {
+    "width": 960,
+    "height": 785,
+    "frames": 25,
+    "durationMs": 5140
+  },
+  "source": "Actual popup and URL matcher. The browser sidebar is explicitly a fictional illustration driven by an in-memory model, not native Chrome tab movement. Apply rules changes the real popup to three workspaces of two tabs.",
+  "edits": "Viewport screenshots resized and GIF/WebP encoded, with presentation pauses. No text replacement, retouching or invented product controls. Recording controls stay outside the exported viewport.",
+  "coverageLimits": "No installed-extension, native toolbar anchoring, native permissions, service-worker restart, real tab manipulation or stable-browser release acceptance is established by these captures.",
+  "rawFrameSHA256": [
+    "036a8ac08d0f64b96844f977230c443ef4f510a35fa4c4ba51473eb4e6c703c4",
+    "8f84c886412f50c8be30bde05e561256c17f8a6f1df5118fd93646ebb5e438b6",
+    "810a08b75d5975596c14725fd0747eb0eafb0df210b4f5d6b1ef7204366993a4",
+    "feae085d54327f2ff7990d63af11132e4a9495dd44c93fce6e09ba6c4eb18706",
+    "a4c799ba42a64eac2632403b9605c3dc07dbaff9feb9a4e98d24ff9e5b540f51",
+    "fe68a16c6d83e75d416b0f4e223ecfb5a7d4cfd500111086ecb16ca1e0102b56",
+    "7fce973aab570ed20013759e7acb98d52902890b47e4c769802b0bb5aabcad8a",
+    "1e7c474841e799dbfce9e46f91f6f29bd1e9b157b5abbbedbb6b7dedfa85c1b0",
+    "0ee048ee6f8d65b7aa5196cf23ec369af52ee54571b8eef66ed73298337d4a8f",
+    "96dc1758bd01bfd5edd8af241d7233865489b0ec35d68ac2ac41822e0580796c",
+    "8abf98a19ce02c700f13ecb3c29bcb3a9cab8ccf42a538823d864aafcf916771",
+    "0b5ea50db8358d214358a46595e8e77a7cc73cc515fe4e3c9d07e572659d9699",
+    "56d7d67575d880c919a8c7c6d170bd8f8f1d9cae0d8de3144a5908cf835a7d0b",
+    "c6ff11dfc2acc34b3c2952687c7708442800cace353f1642354e3e7f0cfa0ca5",
+    "adb5665cc94db0b42864c87d0b91925c1a6e68e4231d2e90bfec6341bc0a493a",
+    "336714970a0a6e71ce1001f4095b7ee58f3bde52a13baca578cb36c098f61b05",
+    "bdfd702801503c5ba1b09b50e020d2a1a5734247b8cef54864dcd5d5a6869e3c",
+    "3c1335f82afac8d63a4ccae4c0a3248bb40a4be4a0370ab4fed6d562689e9455",
+    "bdfd71d713f57e6da0c01b9d885b981d5f61269ecd2a12e6911fb7f9174ea101",
+    "b23a36fa3f91e4b18f18e97ccd706dd3fe61300e6504498b51a6ba31d7630869",
+    "8e7f3dfc52ca21d2c71e168efc98b3c40496649ce192ca3fbfe4973682a1f7ff",
+    "d35283605fbaf452373434addd3e70d15e3f952399280efac1ba2e3264c28e1c",
+    "99b9085ae5bb7fafef0491dd7deaec96d5b372a2510c264b53c8c6f43c77c5e7",
+    "003c4ab4b2ad594663ccb0185840b8991f5ad63b8348aca0f040321424250123",
+    "9c1c1e4db4e064f7fc574240d9f1e0160f1bc7bfed15389c984fd7b40bffaf09",
+    "9c1c1e4db4e064f7fc574240d9f1e0160f1bc7bfed15389c984fd7b40bffaf09"
+  ],
+  "files": [
+    {
+      "file": "app-preview.webp",
+      "bytes": 51686,
+      "sha256": "89b3127de0886e9fff780653b3beb7d46357f6f295cd99d9ef5350d853777ccd"
+    },
+    {
+      "file": "app-preview.gif",
+      "bytes": 405791,
+      "sha256": "32ef1cd46d8007415052feb7093e65595f01ad16df5b19fd9b5814c87bb07544"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cl
 
 <img src="docs/images/app-preview.gif" width="640" alt="Tab Bundlr grouping fictional tabs into Fieldnotes, Design system, and Research workspaces in an illustrated vertical browser sidebar">
 
-App preview with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp).
+App preview of the unpublished 1.1.0 refresh candidate with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp). [Capture provenance](docs/images/app-preview.provenance.json).
 
 ## Status
 
