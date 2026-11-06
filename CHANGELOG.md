@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- Adopt pinned App Stylr v1.4.1 styles, typography and precise geometry.
+- Keep the existing grouping glyph over the neutral Graphite icon tile.
+- Quiet feedback surfaces and retain workspace-specific color meaning.
+- Add directly rendered 512px icons and route management cards to 128px artwork for Retina clarity.
+- Refresh interface media and record current verification coverage in the release notes.
+
 ## 1.0.0
 
 - Present local and connected destinations through one workspace rule editor.

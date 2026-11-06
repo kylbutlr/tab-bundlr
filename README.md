@@ -10,11 +10,13 @@ It is a local-first Manifest V3 Chrome extension. No account, hosted profile, cl
 
 <img src="docs/images/app-preview.gif" width="640" alt="Tab Bundlr grouping fictional tabs into Fieldnotes, Design system, and Research workspaces in an illustrated vertical browser sidebar">
 
-App preview with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp).
+App preview of Tab Bundlr 1.1.0 with demo data. The browser sidebar is an illustration. [App overview](https://kylbutlr.com/apps/tab-bundlr). [Still image](docs/images/app-preview.webp). [Capture provenance](docs/images/app-preview.provenance.json).
 
 ## Status
 
-Tab Bundlr 1.0.0 is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
+Version **1.1.0** adopts App Stylr v1.4.1. See the [release notes](docs/release-notes-v1.1.0.md) for changes and verification coverage.
+
+Tab Bundlr is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
 
 ## Highlights
 
@@ -27,7 +29,7 @@ Tab Bundlr 1.0.0 is distributed through [GitHub Releases](https://github.com/kyl
 
 ### Install locally
 
-1. Download the versioned ZIP from [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0), or clone this repository and run `npm run package`.
+1. Download the versioned ZIP from [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases), or clone this repository and run `npm run package`.
 2. Extract the ZIP into a permanent folder. Keep this folder after installation.
 3. Open `chrome://extensions`.
 4. Enable **Developer mode**.
@@ -156,6 +158,7 @@ Use Node.js 22 or newer. The extension has no runtime dependencies. Run `npm ci`
 
 ```bash
 npm ci
+npm run styles
 npm test
 npx playwright install chromium
 npm run test:browser
@@ -183,7 +186,7 @@ Packaging creates a local artifact. Publishing the ZIP and checksum to GitHub Re
 
 ## App Stylr
 
-Tab Bundlr follows the pinned [App Stylr v1.2.0 source](https://github.com/kylbutlr/app-stylr/tree/b3ca31ea264d5dd233fd871ac167247f1c306985) contract for its standalone popup and options surfaces. Review the current [App Stylr Visual Reference](https://app-stylr.netlify.app/) as guidance, but upgrade the pinned release deliberately before adopting newer contract requirements.
+Tab Bundlr follows the pinned [App Stylr v1.4.1 source](https://github.com/kylbutlr/app-stylr/tree/v1.4.1) contract for its standalone popup and options surfaces. Review the current [App Stylr Visual Reference](https://kylbutlr.com/app-stylr) as guidance, but upgrade the pinned release deliberately before adopting newer contract requirements.
 
 The popup width exception and current styling boundary are documented in [docs/app-stylr-exceptions.md](docs/app-stylr-exceptions.md).
 
@@ -195,7 +198,7 @@ Start with the [support guide](docs/support.md) and [troubleshooting guide](docs
 
 Tab Bundlr is available under the [MIT License](LICENSE).
 
-Current styling source: [App Stylr Evening adoption](docs/app-stylr-evening-adoption.md).
+Current styling source: [App Stylr v1.4.1 adoption](docs/app-stylr-v1.4.1.md).
 
 ### Troubleshooting
 

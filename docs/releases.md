@@ -2,12 +2,16 @@
 
 Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases). Users install the extracted ZIP using Chrome's **Load unpacked** control and update it manually. Chrome Web Store registration, submission, screenshots, and dashboard disclosures are outside this release's scope.
 
+## Current release
+
+Version 1.1.0 applies the App Stylr visual refresh and high-resolution Graphite icons. See [v1.1.0 notes](release-notes-v1.1.0.md) for exact verification coverage and remaining native-browser limits. Historical v1.0.0 evidence below remains specific to that version.
+
 ## Release assets
 
-For version 1.0.0:
+For version 1.1.0:
 
-- `tab-bundlr-1.0.0.zip`: extension runtime, bundled font licenses, and MIT license.
-- `tab-bundlr-1.0.0.sha256`: checksum for the exact published ZIP.
+- `tab-bundlr-1.1.0.zip`: extension runtime, bundled font licenses, and MIT license.
+- `tab-bundlr-1.1.0.sha256`: checksum for the exact published ZIP.
 
 The repository also provides the [installation guide](installation.md), [privacy policy](privacy.md), [support guide](support.md), and [MIT License](../LICENSE). Do not include settings exports, browser profiles, private screenshots, or credentials in release assets.
 
@@ -18,7 +22,7 @@ The repository also provides the [installation guide](installation.md), [privacy
 3. If consolidating history, complete the separate recoverable backup and repository-state inventory first. Prepare and validate the parentless candidate against the final default-branch tree. Obtain explicit authorization before destructive repository operations.
 4. Verify the restored repository, then make it public only with explicit authorization. Check that the source, license, privacy policy, issue tracker, and installation guide are publicly accessible.
 5. From a clean checkout of the exact release commit, run `npm ci`, `npm test`, `npm run test:browser`, and `npm run package` using Node.js 22 or newer and the pinned Playwright Chromium installation. Run resource-intensive checks serially and clean up the disposable browser.
-6. Verify the ZIP and checksum, including the MIT license and every imported runtime module. Publish these exact two assets with tag `v1.0.0` targeting the verified release commit. Repository source archives are also available separately through GitHub.
+6. Verify the ZIP and checksum, including the MIT license and every imported runtime module. Publish these exact two assets with the matching `v<version>` tag targeting the verified release commit. Repository source archives are also available separately through GitHub.
 7. Download the published assets, verify their checksum again, inspect the tag's target, and confirm anonymous access to the release and documentation. Record publication success only after these checks pass.
 
 Creating a package does not publish a release. Tags, repository visibility changes, and publication are separate authorized actions. An unpacked installation does not receive automatic updates from GitHub.
