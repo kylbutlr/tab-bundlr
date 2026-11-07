@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+- Patch development image tooling while retaining the exact App Stylr visual-source pin.
+
+- Update installation and saved-workspace guidance for the current public package.
+
 ## 1.1.0
 
 - Adopt pinned App Stylr v1.4.1 styles, typography and precise geometry.
