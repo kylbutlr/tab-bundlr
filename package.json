@@ -1,6 +1,6 @@
 {
   "name": "tab-bundlr",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,5 +17,8 @@
   "devDependencies": {
     "playwright": "1.62.1",
     "app-stylr": "file:vendor/packages/app-stylr-1.4.1.tgz"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
   }
 }

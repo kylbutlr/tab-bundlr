@@ -4,6 +4,8 @@ Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP t
 
 ## Current release
 
+A local v1.1.1 patch candidate includes the installation/saved-rule guidance and development dependency fixes. It is not published. The existing published v1.1.0 assets remain unchanged.
+
 Version 1.1.0 applies the App Stylr visual refresh and high-resolution Graphite icons. See [v1.1.0 notes](release-notes-v1.1.0.md) for exact verification coverage and remaining native-browser limits. Historical v1.0.0 evidence below remains specific to that version.
 
 ## Release assets
