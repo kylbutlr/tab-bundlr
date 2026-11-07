@@ -2,7 +2,7 @@
 
 ## Install from GitHub
 
-1. Download `tab-bundlr-1.0.0.zip` and its matching `.sha256` file from [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.0.0). You can also clone the repository and build with `npm run package`.
+1. Download the versioned `tab-bundlr-<version>.zip` and its matching `.sha256` file from the [latest GitHub release](https://github.com/kylbutlr/tab-bundlr/releases/latest). Use the release assets, not GitHub's Source code ZIP. You can also clone the repository and build with `npm run package`.
 2. Optionally verify the checksum using the command below, then extract the ZIP into a permanent folder. Chrome loads the extension from this folder, so retain it after installation.
 3. Open `chrome://extensions`.
 4. Turn on **Developer mode**.
@@ -14,16 +14,16 @@
 
 No account or API credential is required.
 
-For 1.0.0, run this from the folder containing both downloaded files:
+Put the ZIP and its matching checksum in a fresh download folder. Run this from that folder before extracting:
 
 ```bash
 # macOS
-shasum -a 256 -c tab-bundlr-1.0.0.sha256
+shasum -a 256 -c tab-bundlr-*.sha256
 # Linux
-sha256sum -c tab-bundlr-1.0.0.sha256
+sha256sum -c tab-bundlr-*.sha256
 ```
 
-On Windows PowerShell, run `Get-FileHash .\tab-bundlr-1.0.0.zip -Algorithm SHA256` and compare the hash with the matching `.sha256` file.
+On Windows PowerShell, run `Get-FileHash .\tab-bundlr-*.zip -Algorithm SHA256` and compare the hash with the matching `.sha256` file. Confirm the filenames use the same version. After extraction, `manifest.json` should show that version too.
 
 ## First workspace
 

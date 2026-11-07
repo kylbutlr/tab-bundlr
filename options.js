@@ -623,7 +623,7 @@ async function renderTrainedRules() {
   if (!rules.length) {
     const empty = document.createElement('p');
     empty.className = 'field-help';
-    empty.textContent = 'No saved workspace links yet. Use Teach in the popup while a relevant tab is active.';
+    empty.textContent = 'No saved workspace links yet. Add a rule here, or open an unassigned tab and choose Save workspace rule in the popup.';
     trainedRules.append(empty);
     return;
   }
