@@ -1,5 +1,11 @@
 # Release verification
 
+## 1.2.0 local candidate, November 12, 2026
+
+Current candidate checks and acceptance limits are recorded in [the 1.2.0 release notes](release-notes-v1.2.0.md) and [sanitized receipt](release-v1.2.0-receipt.json). The isolated candidate passed 190 Node tests, App Stylr/syntax checks and packaging. Chrome verified v1.2.0 after a protected reload, with two disposable tabs grouped and restored through Undo, zero test tabs retained and zero Radar requests from the controller. Current user-confirmed rule counts and visible protections were preserved. Nothing has been published.
+
+The sections below preserve historical 1.0.0 evidence and do not establish 1.2.0 release acceptance.
+
 Version 1.0.0 uses open-source GitHub distribution: a versioned ZIP installed unpacked in Chrome, with privacy and support information in this repository. Chrome Web Store submission is outside this release's scope. The checks below distinguish automated behavior, disposable Chromium checks, native browser observations, and accepted verification limits. Historical v0.8 checks are not current release evidence.
 
 ## Automated behavior
