@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 (local release candidate, unpublished)
+
+- Add optional Radar project grouping through the existing signed-in Chrome session, with reviewed native project bindings and a guarded catalog expansion/Undo flow.
+- Keep local organization account-free and preserve Shortcut rules, pinned tabs, manual groups, pause/focus holds, imports, and tab move history.
+- Prevent restored home-base pages that redirect to sign-in from spawning replacement loops.
+- Recheck automation/category preferences after source reads and preserve connection names and precedence in project previews.
+- Keep settings snapshots fresh during metadata-only holds and qualify catalog rollback by the selected connection.
+- Record source, installed-client and release acceptance separately; no OAuth client metadata host or consent is required.
+
 ## 1.1.1
 
 - Patch development image tooling while retaining the exact App Stylr visual-source pin.

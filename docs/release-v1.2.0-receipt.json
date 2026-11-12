@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "version": "1.2.0",
+  "status": "local-unpublished-candidate",
+  "recordedAt": "2026-11-12T19:11:42.797440+00:00",
+  "baseCommit": "06679a7936a1011b8ae7a5f9fd3bd9033d9a08ce",
+  "functionalSourceChange": "Version metadata and release documentation only after merged PR #3.",
+  "localValidation": {
+    "nodeVersion": "22.23.1",
+    "tests": 190,
+    "passed": 190,
+    "failed": 0,
+    "styles": "passed",
+    "syntax": "passed",
+    "package": "passed",
+    "privacyAndAllowlist": "passed",
+    "archiveIntegrity": "passed",
+    "versionConsistency": "passed",
+    "whitespace": "passed"
+  },
+  "installedAcceptance": {
+    "protectedReloadHoldVerified": true,
+    "chromeVersionReadback": "1.2.0",
+    "groupedDisposableTabs": 2,
+    "undoneDisposableTabs": 2,
+    "remainingDisposableTabs": 0,
+    "controllerRadarRequests": 0,
+    "workingTabComparisonPassed": true,
+    "windowTabCountBefore": 21,
+    "windowTabCountAfter": 21,
+    "userConfirmedRuleCountLabels": [
+      13,
+      12,
+      3
+    ],
+    "ruleCountLabelsPreserved": true,
+    "visiblePreferenceControlsPreserved": 5,
+    "visibleWorkingGroupSummariesPreserved": true,
+    "radarSourceEnabledProjectCount": 34,
+    "normalHandlingResumedWithoutStartupReplay": true,
+    "originalSelectionRestored": true,
+    "settingsControlRetained": true,
+    "browserAutomationStopped": true
+  },
+  "earlierObservation": {
+    "initialRuleCountLabels": [
+      13,
+      11
+    ],
+    "laterRuleCountLabels": [
+      13,
+      12,
+      3
+    ],
+    "userConfirmedEditsWereHis": true,
+    "firstAttemptHoldNotEstablished": true,
+    "noDisposableTestBeforeVerifiedHold": true
+  },
+  "limits": [
+    "The four review-guard race cases are synthetic Node regressions; real preferences were not changed for QA.",
+    "Whole-browser network requests were not instrumented; zero Radar requests applies to the disposable controller.",
+    "No deliberate repeat service connection test, new consent, token extraction or real-ticket grouping demonstration.",
+    "Exact ZIP installation was not repeated. Loaded checkout retained a historical comment and an unused legacy CSS rule excluded from the clean archive.",
+    "Automatic ticket reads stop on session expiry; unattended renewal and closed-Codex installed acceptance remain unverified.",
+    "Release commit/review, final release CI and explicit publication approval remain outstanding."
+  ],
+  "artifacts": {
+    "zip": "tab-bundlr-1.2.0.zip",
+    "checksum": "tab-bundlr-1.2.0.sha256",
+    "sha256": "aaa403d86e36e92d46e7d9ab742b83616d125f484caaefb077237b27e5f14d7e",
+    "sourcePatch": "release-v1.2.0.patch"
+  },
+  "externalEffects": {
+    "published": false,
+    "tagCreated": false,
+    "pushed": false,
+    "prOpened": false,
+    "merged": false,
+    "deployed": false,
+    "newPermissionGranted": false,
+    "realSettingsImportedOrReplaced": false,
+    "realSourcesOrRulesEdited": false,
+    "liveTicketWrite": false,
+    "harvestWrite": false
+  },
+  "privacy": "Counts and flags only. No real tab/provider/account/workspace/project/ticket IDs, titles, URLs, private bodies or credentials retained.",
+  "runtimeSha256": {
+    "background.js": "29818dd0c2f599762995cba89d96f0ba3aa9c1deaa8995103649b77e0c13542f",
+    "radar-session.js": "c80f8a3984547d7791386e975ad0a485ca598611f9039713c30ad5768595595b",
+    "radar-catalog.js": "abfb36ea04c952216a455b6c1ef267523f8d57e0c2c9c8800fc87106f0f0b9bc",
+    "radar-catalog-options.js": "e89ad55a1c51f43b79f4bbefe3092f13da109b9f0d349c92c0d8b4c9ad233b2d",
+    "radar-native-session.js": "e75b067b964694fe98c8d9180525eb991e2180074e23efc34b8da33132b8111f",
+    "radar-disposable.js": "59cc4419b14866e74503b6c8c8abbfe6a4b750d891ede3f0122f54175383e7f4",
+    "reload-safety.js": "ee075e16198d63cbc9eb76215244b2f3a8249c55af2c15cfefb2dce381bbee97"
+  }
+}

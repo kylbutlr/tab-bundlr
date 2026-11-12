@@ -14,7 +14,7 @@ App preview of Tab Bundlr 1.1.0 with demo data. The browser sidebar is an illust
 
 ## Status
 
-Version **1.1.0** adopts App Stylr v1.4.1. See the [release notes](docs/release-notes-v1.1.0.md) for changes and verification coverage.
+Version **1.2.0** is a local, unpublished release candidate adding optional Radar project grouping and home-base redirect-loop protection. See the [candidate release notes](docs/release-notes-v1.2.0.md) for changes and acceptance limits. The published **1.1.1** package remains available from GitHub Releases. The App Stylr v1.4.1 pin is unchanged.
 
 Tab Bundlr is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
 

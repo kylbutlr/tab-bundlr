@@ -4,16 +4,20 @@ Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP t
 
 ## Current release
 
-A local v1.1.1 patch candidate includes the installation/saved-rule guidance and development dependency fixes. It is not published. The existing published v1.1.0 assets remain unchanged.
+The current published release is [v1.1.1](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.1.1), published November 7, 2026. It contains installation/saved-rule guidance and development dependency fixes and predates the Radar integration.
+
+Version **1.2.0** is prepared locally and is **not published**. It contains the merged optional Radar grouping, home-base redirect-loop fix and PR review safeguards. See [candidate release notes and acceptance](release-notes-v1.2.0.md). Publication remains gated on the recorded acceptance results and explicit approval.
 
 Version 1.1.0 applies the App Stylr visual refresh and high-resolution Graphite icons. See [v1.1.0 notes](release-notes-v1.1.0.md) for exact verification coverage and remaining native-browser limits. Historical v1.0.0 evidence below remains specific to that version.
 
 ## Release assets
 
-For version 1.1.0:
+For the unpublished version 1.2.0 candidate:
 
-- `tab-bundlr-1.1.0.zip`: extension runtime, bundled font licenses, and MIT license.
-- `tab-bundlr-1.1.0.sha256`: checksum for the exact published ZIP.
+- `tab-bundlr-1.2.0.zip`: extension runtime, bundled font licenses, and MIT license.
+- `tab-bundlr-1.2.0.sha256`: checksum for the exact local candidate ZIP.
+
+These local artifacts are not release assets until publication is explicitly approved. Historical published artifacts are unchanged.
 
 The repository also provides the [installation guide](installation.md), [privacy policy](privacy.md), [support guide](support.md), and [MIT License](../LICENSE). Do not include settings exports, browser profiles, private screenshots, or credentials in release assets.
 
