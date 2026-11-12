@@ -46,3 +46,25 @@ test('connection resolver briefly caches failure and bounds cached destinations'
   await assert.rejects(resolver.resolve(match('1'), {}), /Offline/);
   assert.equal(calls, 5);
 });
+
+test('cache never reuses an equal-number result after account, profile, enabled state or credentials change', async () => {
+  let calls = 0;
+  const resolver = createSourceResolver(() => async () => {
+    calls += 1;
+    return { ok: true, async json() { return { name: `Response ${calls}` }; } };
+  });
+  const first = match();
+  await resolver.resolve(first, { tracker: { token: 'synthetic-a' } });
+  await resolver.resolve(first, { tracker: { token: 'synthetic-b' } });
+  assert.equal(calls, 2);
+  const { upgradeWorkspaceSource } = await import('../sources.js');
+  const upgraded = upgradeWorkspaceSource(source, { provider: 'tracker', authority: 'https://api.example',
+    workspaceId: 'workspace-a', accountId: 'account-a', entityKind: 'project' });
+  const next = { ...first, source: { ...upgraded, enabled: true } };
+  await resolver.resolve(next, {});
+  await resolver.resolve({ ...next, source: { ...next.source, identity: { ...next.source.identity, accountId: 'account-b' } } }, {});
+  assert.equal(calls, 4);
+  const disabled = await resolver.resolve({ ...first, source: { ...source, enabled: false } }, {});
+  assert.equal(disabled.status, 'disabled');
+  assert.equal(calls, 4);
+});

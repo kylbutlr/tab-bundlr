@@ -1,3 +1,7 @@
+// Clean up historical keys on import without loading the retired OAuth path.
+const RADAR_CONNECTION_KEY = 'radarOAuthConnection';
+const RADAR_PENDING_KEY = 'radarOAuthPending';
+import { RADAR_SESSION_PERMISSIONS } from './radar-session.js';
 import {
   ACTIVATE_OPENED_TABS_STORAGE_KEY,
   ACTIVITY_HISTORY_STORAGE_KEY,
@@ -49,6 +53,7 @@ import {
   WORKSPACE_SOURCES_STORAGE_KEY,
   normalizeWorkspaceSource,
   normalizeWorkspaceSources,
+  workspaceSourceSaveChanges,
 } from './sources.js';
 import {
   ensureSettingsMigrated,
@@ -228,6 +233,8 @@ async function importSettings(file) {
     if (!window.confirm('Import these Tab Bundlr settings? Supplied values will update the current settings and clear saved connection credentials.')) return;
     const current = await chrome.storage.local.get(BACKUP_STORAGE_KEYS);
     const settings = settingsImportChanges(current, backup.settings);
+    await chrome.storage.session.remove(RADAR_PENDING_KEY);
+    await chrome.storage.local.remove(RADAR_CONNECTION_KEY);
     await chrome.storage.local.remove([...RUNTIME_STORAGE_KEYS, CLIENT_CATALOG_STORAGE_KEY]);
     await chrome.storage.local.set(settings);
     await Promise.all([loadSettings(), renderTrainedRules(), renderSmartGroups(), renderManagedGroupOrder(), renderWorkspaceSources()]);
@@ -449,7 +456,8 @@ async function saveWorkspaceSourceState(sourceId, enabled) {
     throw new Error(`Save the required credentials for ${source.name} first.`);
   }
   if (enabled && source.permissionOrigins.length) {
-    const granted = await chrome.permissions.request({ origins: source.permissionOrigins });
+    const granted = await chrome.permissions.request(source.schemaVersion >= 3
+      ? RADAR_SESSION_PERMISSIONS : { origins: source.permissionOrigins });
     if (!granted) throw new Error(`${source.name} remains off because service access was not granted.`);
   }
   await chrome.storage.local.set({
@@ -468,7 +476,9 @@ function showWorkspaceSourceStatus(message, tone = 'info') {
 function openSourcePermissionDisclosure(source) {
   const disclosure = sourceAccessDisclosure(source, false);
   pendingSourceAccess = source;
-  sourcePermissionCopy.textContent = `${disclosure.name} needs permission before it can make read-only requests to:`;
+  sourcePermissionCopy.textContent = source.schemaVersion >= 3
+    ? `${disclosure.name} needs optional scripting access to read metadata in an existing signed-in ticket tab at:`
+    : `${disclosure.name} needs permission before it can make read-only requests to:`;
   sourcePermissionOrigins.replaceChildren(...disclosure.origins.map((origin) => {
     const item = document.createElement('li');
     item.textContent = origin;
@@ -503,7 +513,8 @@ async function renderWorkspaceSources() {
   }
   const sourceAccess = new Map(await Promise.all(sources.map(async (source) => {
     if (!source.permissionOrigins.length || !chrome.permissions?.contains) return [source.id, true];
-    const granted = await chrome.permissions.contains({ origins: source.permissionOrigins }).catch(() => false);
+    const granted = await chrome.permissions.contains(source.schemaVersion >= 3
+      ? RADAR_SESSION_PERMISSIONS : { origins: source.permissionOrigins }).catch(() => false);
     return [source.id, granted];
   })));
   sources.forEach((source) => {
@@ -1165,12 +1176,9 @@ workspaceSourceForm.addEventListener('submit', async (event) => {
       ...JSON.parse(workspaceSourceJson.value),
       enabled: false,
     });
-    const stored = await chrome.storage.local.get(WORKSPACE_SOURCES_STORAGE_KEY);
-    const sources = normalizeWorkspaceSources(stored[WORKSPACE_SOURCES_STORAGE_KEY]);
-    await chrome.storage.local.set({
-      [WORKSPACE_SOURCES_STORAGE_KEY]: [...sources.filter((candidate) => candidate.id !== source.id), source],
-    });
-    showWorkspaceSourceStatus(`Saved ${source.name} off. Review its service addresses and credentials before turning it on.`, 'success');
+    const stored = await chrome.storage.local.get([WORKSPACE_SOURCES_STORAGE_KEY, WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
+    await chrome.storage.local.set(workspaceSourceSaveChanges(stored, source));
+    showWorkspaceSourceStatus(`Saved ${source.name} off and cleared its previous credentials. Review its service addresses and enter credentials before turning it on.`, 'success');
     workspaceSourceJson.value = '';
     await renderWorkspaceSources();
   } catch (error) {

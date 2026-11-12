@@ -17,6 +17,7 @@
   "optional_host_permissions": [
     "https://*/*"
   ],
+  "optional_permissions": ["scripting"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

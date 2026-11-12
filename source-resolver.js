@@ -6,10 +6,12 @@ export function createSourceResolver(fetchForReason, { clock = Date.now, maxEntr
   return {
     clear() { entries.clear(); },
     resolve(match, secrets, reason) {
-      const key = JSON.stringify([match.source.id, match.route.id, match.captures]);
+      const key = JSON.stringify([match.source, match.route, match.captures]);
+      const credentials = JSON.stringify(secrets?.[match.source.id] || {});
       const existing = entries.get(key);
-      if (existing && (existing.pending || existing.expiresAt > clock())) return existing.request;
-      const entry = { pending: true, expiresAt: 0 };
+      if (existing && existing.credentials === credentials
+        && (existing.pending || existing.expiresAt > clock())) return existing.request;
+      const entry = { pending: true, expiresAt: 0, credentials };
       const request = resolveWorkspaceSourceMatch(match, secrets?.[match.source.id] || {}, fetchForReason(reason))
         .then((result) => { entry.expiresAt = clock() + 300000; return result; }, (error) => {
           entry.expiresAt = clock() + 30000;

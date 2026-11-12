@@ -99,6 +99,8 @@ button.secondary { border-color: var(--border-strong); background: transparent; 
 .source-credentials { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; flex-basis: 100%; }
 .source-credentials label { min-width: 0; margin-bottom: 0; }
 .source-credentials button { height: 44px; }
+#radar-connection-form button:disabled { opacity: .5; cursor: default; }
+.radar-client-document { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); font: 12px/1.5 var(--font-mono); }
 .credential-help { grid-column: 1 / -1; margin-top: -4px; }
 .client-rule-group { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-raised); }
 .client-rule-group + .client-rule-group { margin-top: 8px; }

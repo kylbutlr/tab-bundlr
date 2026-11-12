@@ -8,7 +8,7 @@ const storage = (values) => ({
   async remove(keys) { for (const key of keys) delete values[key]; },
 });
 let serial = 0;
-async function fixture({ granted = true, unavailable = false, rejects = false, revokeAfterRequest = 0 } = {}) {
+async function fixture({ granted = true, unavailable = false, rejects = false, revokeAfterRequest = 0, changeAfterRequest = null } = {}) {
   const access = { granted, rejects };
   const requests = [];
   const removed = event();
@@ -27,6 +27,7 @@ async function fixture({ granted = true, unavailable = false, rejects = false, r
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     requests.push(url);
+    if (requests.length === 2 && changeAfterRequest) changeAfterRequest(local);
     if (requests.length === revokeAfterRequest) access.granted = false;
     return { ok: true, status: 200, async json() { return { workspace_id: '42', name: 'Fixture workspace' }; } };
   };
@@ -95,5 +96,41 @@ test('worker does not apply a completed result if access was revoked while it wa
     assert.equal(result.status, 'permission-required');
     assert.equal(f.requests.length, 2);
     assert.equal(f.groups.length, 0);
+  } finally { f.restore(); }
+});
+
+for (const [name, change] of Object.entries({
+  disabled: (local) => { local.workspaceSources[0].enabled = false; },
+  edited: (local) => { local.workspaceSources[0].name = 'Replacement source'; },
+  removed: (local) => { local.workspaceSources = []; },
+  credential: (local) => { local.workspaceSourceSecrets = { tracker: { token: 'synthetic-replacement' } }; },
+})) {
+  test(`worker does not move a tab when its source is ${name} during a read`, async () => {
+    const f = await fixture({ changeAfterRequest: change });
+    try {
+      const result = await f.worker.processWorkspaceSourceTab({ ...f.tab });
+      assert.equal(result.status, 'source-changed');
+      assert.equal(f.groups.length, 0);
+      assert.equal(f.tab.groupId, -1);
+    } finally { f.restore(); }
+  });
+}
+
+for (const [name, change, expected] of [
+  ['automatic bundling disabled', local => { local.tabBundlrEnabled = false; }, 'disabled'],
+  ['workspace category disabled', local => { local.managedGroupTypeEnabled = { client: false }; }, 'category-disabled'],
+]) test(`in-flight source read does not move a tab after ${name}`, async () => {
+  const f = await fixture({ changeAfterRequest: change });
+  try {
+    const result = await f.worker.processWorkspaceSourceTab({ ...f.tab });
+    assert.equal(result.status, expected); assert.equal(f.groups.length, 0); assert.equal(f.tab.groupId, -1);
+  } finally { f.restore(); }
+});
+
+test('explicit manual Apply rules still resolves a source with automatic bundling off', async () => {
+  const f = await fixture({ changeAfterRequest: local => { local.tabBundlrEnabled = false; } });
+  try {
+    const result = await f.worker.processWorkspaceSourceTab({ ...f.tab }, 'manual-apply', { ignoreEnabled: true });
+    assert.equal(result.moved, true); assert.equal(f.groups.length, 1);
   } finally { f.restore(); }
 });

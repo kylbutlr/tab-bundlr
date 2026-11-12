@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-12T07:55:06Z",
+  "localDate": "2026-11-11",
+  "localTimezone": "America/Los_Angeles",
+  "authorization": "Kyle explicitly approved reloading local Tab Bundlr, exact Radar and scripting access, and one existing-tab ticket preview. No new tabs or real tab organization.",
+  "runtimeEvidence": {
+    "loadedFromAssignedCheckoutVerifiedInChrome": true,
+    "extensionReloadedThroughOwnMetadataOnlyControl": true,
+    "readOnlyHoldObservedActive": true,
+    "optionalPermissionPromptOrigin": "https://radar.sdg.la/*",
+    "scriptingAndOriginAccessVerifiedBySuccessfulReaderPermissionChecks": true,
+    "acquisition": "App-owned Chrome extension isolated reader, existing same-origin browser session",
+    "selectedTicketsRead": 1,
+    "requestPlan": [
+      "GET /api/me",
+      "GET /api/reads?op=bootstrap",
+      "GET /api/reads?op=ticket-get&id={native UUID}&include=page"
+    ],
+    "requestPlanEvidence": "Success path in the actual extension requires all three JSON reads; not an independent network trace.",
+    "settingsSuccessMessageObserved": true,
+    "schemaVersionObserved": 3,
+    "sourceEnabledObserved": false,
+    "providerRadarObserved": true,
+    "sessionTransportObserved": true,
+    "nativeAccountAndWorkspaceFieldsObserved": true,
+    "credentialsEmptyObserved": true,
+    "fullRouteJsonAccessibilityReadback": "Not captured; the visible accessibility projection did not expose the lower JSON route fields. Route generation/expectations covered by local tests.",
+    "scopeMeaning": "Native viewer/account and workspace binding plus ticket/project checks passed in the app reader. No membership/actor equivalence or manual-origin claim.",
+    "sourceSaved": false,
+    "sourceEnabled": false,
+    "groupingApplied": false
+  },
+  "cleanup": {
+    "previewClearedObserved": true,
+    "copyPreviewDisabledObserved": true,
+    "readOnlyHoldReleasedObserved": true,
+    "normalHandlingResumedWithoutStartupReplayObserved": true,
+    "radarOriginalWorkRouteRestored": true,
+    "extensionsControlRouteRestored": true,
+    "originalSelectedTabRestored": true,
+    "newTabsOpened": 0,
+    "tabsReorganizedByTask": 0,
+    "tabsBeforeReload": 8,
+    "tabsAfterCleanup": 7,
+    "tabCountExplanation": "Chrome automatically closed the old extension-owned Settings page during runtime reload. The existing Extensions-control tab was reused, then restored. No user content tab was closed by the task.",
+    "browserAutomationStopped": true,
+    "browserReservationReleased": true
+  },
+  "validation": {
+    "nodeVersion": "22.23.1",
+    "serialNodeTests": 186,
+    "passed": 186,
+    "failed": 0,
+    "stylesCheck": "passed",
+    "syntaxCheck": "passed",
+    "packageCheck": "passed",
+    "diffWhitespaceCheck": "passed",
+    "packageSha256": "0bc60e25f5215674007b4f0c45fc5eae13c0440012d630c0fe6873f1d03149b7"
+  },
+  "limits": {
+    "closedCodexAcceptance": false,
+    "fullInstalledGroupingUndoAcceptance": false,
+    "nativeActivityProvenanceVerified": false,
+    "descriptionRevisionCoverageVerified": false,
+    "dailyCoverageComplete": false,
+    "deletedDescendantIdentityResolved": false
+  },
+  "externalWrites": {
+    "push": false,
+    "prModified": false,
+    "prMerged": false,
+    "deployment": false,
+    "oauthConsent": false,
+    "ticketWrites": false,
+    "harvestWrites": false
+  },
+  "privacy": "No account/workspace/ticket/actor IDs, emails, descriptions, comments, credentials or server payloads retained in this receipt. No screenshot with real ticket data captured.",
+  "localSourceSha256": {
+    "background.js": "704f7399b57777d25aba7a09c0f9e30199aaf44107e6c78473af2a562e3acc31",
+    "radar-session.js": "27a5e3e779184d28516d0971662d9421037e5ac269d25f8bf964eab2111e49a0",
+    "radar-source.js": "e543fe7e0a1b27142dd0b0e973150dc4d2c7eac99dc1d6189fd112714b87eede",
+    "radar-options.js": "986ffc40b651c8c977936e7885315274c87d695c71a03fc3ad3f83ef4448b309",
+    "reload-safety.js": "ee075e16198d63cbc9eb76215244b2f3a8249c55af2c15cfefb2dce381bbee97",
+    "options.html": "efd6094c31ec6e19a68ecc56e241c3ca2a9b1703db1e9b7c9534a748880bbe09",
+    "manifest.json": "6d4122ddb910a66cf3fd4c8360d7327db3a62ee89b81b3d504f98dab2d4e1f3c"
+  }
+}
