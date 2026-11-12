@@ -115,3 +115,22 @@ for (const [name, change] of Object.entries({
     } finally { f.restore(); }
   });
 }
+
+for (const [name, change, expected] of [
+  ['automatic bundling disabled', local => { local.tabBundlrEnabled = false; }, 'disabled'],
+  ['workspace category disabled', local => { local.managedGroupTypeEnabled = { client: false }; }, 'category-disabled'],
+]) test(`in-flight source read does not move a tab after ${name}`, async () => {
+  const f = await fixture({ changeAfterRequest: change });
+  try {
+    const result = await f.worker.processWorkspaceSourceTab({ ...f.tab });
+    assert.equal(result.status, expected); assert.equal(f.groups.length, 0); assert.equal(f.tab.groupId, -1);
+  } finally { f.restore(); }
+});
+
+test('explicit manual Apply rules still resolves a source with automatic bundling off', async () => {
+  const f = await fixture({ changeAfterRequest: local => { local.tabBundlrEnabled = false; } });
+  try {
+    const result = await f.worker.processWorkspaceSourceTab({ ...f.tab }, 'manual-apply', { ignoreEnabled: true });
+    assert.equal(result.moved, true); assert.equal(f.groups.length, 1);
+  } finally { f.restore(); }
+});

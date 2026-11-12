@@ -113,11 +113,17 @@ export async function saveRadarCatalogExpansion(chromeApi, before, after) {
   if (!same(confirmed.workspaceSources, next)) throw new Error('Settings changed during save. Check the connection before continuing.');
 }
 
-export async function undoRadarCatalogExpansion(chromeApi) {
+export function canUndoRadarCatalogExpansion(stored, sourceId) {
+  const previous = stored[RADAR_CATALOG_ROLLBACK_KEY];
+  const source = stored.workspaceSources?.find((source) => source.id === sourceId);
+  return Boolean(sourceId && previous?.after?.id === sourceId && source && same(source, previous.after));
+}
+
+export async function undoRadarCatalogExpansion(chromeApi, sourceId) {
   const stored = await chromeApi.storage.local.get(['workspaceSources', RADAR_CATALOG_ROLLBACK_KEY]);
   const previous = stored[RADAR_CATALOG_ROLLBACK_KEY];
   const index = stored.workspaceSources?.findIndex((source) => source.id === previous?.after?.id);
-  if (!previous || !(index >= 0) || !same(stored.workspaceSources[index], previous.after)) {
+  if (!canUndoRadarCatalogExpansion(stored, sourceId)) {
     throw new Error('Connection changed since expansion. Undo stopped to preserve newer edits.');
   }
   normalizeWorkspaceSource(previous.before);

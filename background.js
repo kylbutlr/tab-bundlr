@@ -1366,7 +1366,12 @@ async function processWorkspaceSourceTab(tab, reason = 'workspace-source', {
     : await sourceResolver.resolve(match, settings.sourceSecrets, reason);
   if (!await hasSourceOriginAccess(match.source.permissionOrigins)) return permissionRequired;
   if (result.status !== 'resolved') return result;
-  const current = await chrome.storage.local.get([WORKSPACE_SOURCES_STORAGE_KEY, WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
+  const current = await chrome.storage.local.get([WORKSPACE_SOURCES_STORAGE_KEY, WORKSPACE_SOURCE_SECRETS_STORAGE_KEY,
+    ENABLED_STORAGE_KEY, MANAGED_GROUP_TYPE_ENABLED_STORAGE_KEY]);
+  if (!ignoreEnabled && !enabledFromStorage(current[ENABLED_STORAGE_KEY])) return { status: 'disabled' };
+  if (!managedGroupTypeIsEnabled(current[MANAGED_GROUP_TYPE_ENABLED_STORAGE_KEY], workspaceType)) {
+    return { status: 'category-disabled', workspaceType };
+  }
   const currentSource = normalizeWorkspaceSources(current[WORKSPACE_SOURCES_STORAGE_KEY])
     .find((source) => source.id === match.source.id);
   if (JSON.stringify(currentSource) !== JSON.stringify(match.source)
@@ -3715,7 +3720,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return;
-  if (readOnlyReload.held) return;
+  if (readOnlyReload.held) {
+    // Preferences can still be edited while automatic tab actions are held.
+    // Drop snapshots without replaying organization or other browser actions.
+    localSnapshotRequests.clear();
+    sourceResolver.clear();
+    return;
+  }
   if (changes[ENABLED_STORAGE_KEY] || changes[ACTIVATE_OPENED_TABS_STORAGE_KEY] || changes[OPENER_INHERITANCE_STORAGE_KEY] || changes[WORKSPACE_SOURCES_STORAGE_KEY] || changes[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]) {
     invalidateLocalSnapshots('settings');
   }

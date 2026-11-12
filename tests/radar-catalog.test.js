@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
 import { inspectRadarCatalogInTab, inspectRadarCatalog, radarCatalogSourcePreview,
-  saveRadarCatalogExpansion, undoRadarCatalogExpansion, RADAR_CATALOG_ROLLBACK_KEY } from '../radar-catalog.js';
+  saveRadarCatalogExpansion, undoRadarCatalogExpansion, canUndoRadarCatalogExpansion, RADAR_CATALOG_ROLLBACK_KEY } from '../radar-catalog.js';
 import { radarProjectSourcePreview } from '../radar-session.js';
 import { createBackup, settingsImportChanges } from '../backup.js';
 const scope = { accountId: '44444444-4444-4444-8444-444444444444', workspaceId: '11111111-1111-4111-8111-111111111111' };
@@ -93,7 +93,9 @@ test('expansion and rollback change only one source, retain protections/Shortcut
   assert.equal(f.state.workspaceSources[0].projects.length, 2);
   assert.deepEqual(f.writes[0], ['workspaceSources', RADAR_CATALOG_ROLLBACK_KEY]);
   f.state.workspaceSources[1].name = 'Intervening other-source edit';
-  await undoRadarCatalogExpansion(f.chrome);
+  assert.equal(canUndoRadarCatalogExpansion(f.state, before.id), true);
+  assert.equal(canUndoRadarCatalogExpansion(f.state, 'different-connection'), false);
+  await undoRadarCatalogExpansion(f.chrome, before.id);
   assert.deepEqual(f.state.workspaceSources[0], before); assert.equal(f.state.workspaceSources[1].name, 'Intervening other-source edit');
   for (const key of Object.keys(baseline).filter(key => key !== 'workspaceSources')) assert.deepEqual(f.state[key], baseline[key]);
   assert.equal(f.state[RADAR_CATALOG_ROLLBACK_KEY], undefined);
@@ -105,7 +107,16 @@ test('stale review and stale rollback refuse to overwrite newer source edits', a
   await assert.rejects(saveRadarCatalogExpansion(f.chrome, before, after)); assert.equal(f.writes.length, 0);
   f.state.workspaceSources[0] = before; await saveRadarCatalogExpansion(f.chrome, before, after);
   f.state.workspaceSources[0].enabled = false;
-  await assert.rejects(undoRadarCatalogExpansion(f.chrome)); assert.equal(f.state.workspaceSources[0].enabled, false);
+  await assert.rejects(undoRadarCatalogExpansion(f.chrome, before.id)); assert.equal(f.state.workspaceSources[0].enabled, false);
+});
+test('catalog Undo refuses a different selected connection without changing either source', async () => {
+  const before = source(); const { result } = await inspect();
+  const after = { ...radarCatalogSourcePreview(before, result), enabled: true };
+  const f = storageFixture(before);
+  await saveRadarCatalogExpansion(f.chrome, before, after);
+  const snapshot = structuredClone(f.state); const writes = f.writes.length;
+  await assert.rejects(undoRadarCatalogExpansion(f.chrome, 'different-connection'));
+  assert.deepEqual(f.state, snapshot); assert.equal(f.writes.length, writes);
 });
 test('expansion cannot rename/remove prior bindings, change precedence, or introduce a new request', async () => {
   const before = source(); const { result } = await inspect();

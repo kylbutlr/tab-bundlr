@@ -45,11 +45,15 @@ test('real worker holds startup and automatic tab handlers until explicit finish
   f.chrome.storage.onChanged = event();
   f.chrome.runtime = { id: 'a'.repeat(32), getURL: (path) => `chrome-extension://${'a'.repeat(32)}/${path}`, onMessage: messages };
   f.local.settingsVersion = 2;
+  f.local.tabBundlrEnabled = false;
   globalThis.chrome = f.chrome;
   try {
     const { TabBundlrBackground: worker } = await import('../background.js?read-only-reload');
     const result = await worker.initializeForSession();
     assert.equal(result.readOnlyPreview, true); assert.equal(tabReads, 0);
+    assert.equal((await worker.processWorkspaceSourceTab({ url: 'https://synthetic.example/' })).status, 'disabled');
+    f.local.tabBundlrEnabled = true;
+    for (const listener of f.chrome.storage.onChanged.listeners) listener({ tabBundlrEnabled: { oldValue: false, newValue: true } }, 'local');
     created.listeners[0]({ id: 2, windowId: 9, url: 'https://synthetic.example/' });
     updated.listeners[0](2, { url: 'https://synthetic.example/login' }, { id: 2, windowId: 9 });
     await new Promise(setImmediate); assert.equal(tabReads, 0);
@@ -58,5 +62,6 @@ test('real worker holds startup and automatic tab handlers until explicit finish
     assert.equal(blocked.code, 'read-only-preview');
     const finished = await new Promise((resolve) => messages.listeners[0]({ type: 'READ_ONLY_PREVIEW_FINISH' }, sender, resolve));
     assert.equal(finished.ok, true); assert.equal(finished.held, false); assert.equal(tabReads, 0);
+    assert.equal((await worker.processWorkspaceSourceTab({ url: 'https://synthetic.example/' })).status, 'ignored');
   } finally { delete globalThis.chrome; }
 });

@@ -47,10 +47,11 @@ test('explicit project review preserves bindings, requires a new ID for legacy s
   assert.equal(old.schemaVersion, 3);
   assert.deepEqual(matchingWorkspaceSources([{ ...old, enabled: true }], url(second)), []);
   assert.throws(() => radarProjectSourcePreview(metadata, old.id, 'New label', old));
-  const first = source(); const added = radarProjectSourcePreview({ ...second,
+  const first = { ...source(), name: 'Reviewed connection name', precedence: 'before-rules' }; const added = radarProjectSourcePreview({ ...second,
     ticket: { ...second.ticket, project_id: accountId } }, first.id, 'Second project', first);
   assert.equal(added.enabled, false); assert.equal(added.projects.length, 2); assert.equal(first.projects.length, 1);
   assert.equal(added.routes.length, 1);
+  assert.equal(added.name, first.name); assert.equal(added.precedence, first.precedence);
   assert.throws(() => radarProjectSourcePreview({ ...metadata, accountId: second.ticket.id }, first.id, 'Wrong account', first), { code: 'account-changed' });
 });
 test('closed session schema rejects arbitrary reads, missing/duplicate projects, credentials and generic transport', async () => {

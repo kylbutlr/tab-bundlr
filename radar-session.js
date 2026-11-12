@@ -162,7 +162,8 @@ export function radarProjectSourcePreview(metadata, connectionId, workspaceName,
   const project = { id: metadata.ticket.project_id, name: workspaceName.trim() };
   const index = projects.findIndex((candidate) => candidate.id === project.id);
   if (index < 0) projects.push(project); else projects[index] = project;
-  const source = { ...exact, schemaVersion: 4, projects, routes: [radarProjectRoute(exact.identity.workspaceId)] };
+  const source = { ...(previous || exact), schemaVersion: 4, enabled: false, projects,
+    routes: [radarProjectRoute(exact.identity.workspaceId)] };
   validateRadarSessionSource(source);
   return source;
 }
