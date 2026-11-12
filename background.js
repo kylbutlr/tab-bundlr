@@ -112,6 +112,7 @@ const TAB_ACTIVATION_HISTORY_PERSIST_DELAY_MS = 75;
 const MAX_API_CONCURRENCY = 4;
 const SESSION_RECONCILED_STORAGE_KEY = 'sessionReconciled';
 const PERSISTENT_HOME_BASES_RECONCILED_STORAGE_KEY = 'persistentHomeBasesReconciled';
+const PERSISTENT_HOME_BASE_RESTORATIONS_STORAGE_KEY = 'persistentHomeBaseRestorations';
 const groupEnsureRequests = new Map();
 const tabProcessing = new Map();
 const inFlightGroupMoves = new Set();
@@ -143,6 +144,7 @@ let pendingTabActivationHistoryWrite = null;
 let lastActionWrite = Promise.resolve();
 let focusHeldTabsWrite = Promise.resolve();
 let persistentHomeBaseAnchorsWrite = Promise.resolve();
+let persistentHomeBaseRestorationsWrite = Promise.resolve();
 let focusHeldTabsReconcileRequest = null;
 let focusHeldTabsReconcileAgain = false;
 let sessionInitializationRequest = null;
@@ -598,6 +600,34 @@ async function forgetPersistentHomeBaseAnchor(tabId) {
   await updatePersistentHomeBaseAnchors((anchors) => {
     delete anchors[String(tabId)];
     return anchors;
+  });
+}
+
+async function getPersistentHomeBaseRestorations() {
+  const stored = await chrome.storage.session.get(PERSISTENT_HOME_BASE_RESTORATIONS_STORAGE_KEY);
+  const source = stored[PERSISTENT_HOME_BASE_RESTORATIONS_STORAGE_KEY];
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+  return Object.fromEntries(Object.entries(source).flatMap(([url, state]) => {
+    const key = duplicateKeyForUrl(url);
+    return key && state && typeof state === 'object'
+      && (state.tabId === null || Number.isInteger(state.tabId))
+      ? [[key, { tabId: state.tabId, redirected: state.redirected === true }]] : [];
+  }));
+}
+
+async function updatePersistentHomeBaseRestorations(update) {
+  const request = persistentHomeBaseRestorationsWrite.catch(() => {}).then(async () => {
+    const current = await getPersistentHomeBaseRestorations();
+    await chrome.storage.session.set({ [PERSISTENT_HOME_BASE_RESTORATIONS_STORAGE_KEY]: update(current) });
+  });
+  persistentHomeBaseRestorationsWrite = request;
+  await request;
+}
+
+async function forgetPersistentHomeBaseRestoration(url) {
+  await updatePersistentHomeBaseRestorations((states) => {
+    delete states[url];
+    return states;
   });
 }
 
@@ -1459,6 +1489,12 @@ async function updatePersistentHomeBaseUrl(previousUrl, nextUrl, tab) {
     .concat(nextExactUrl));
   await chrome.storage.local.set({ [PERSISTENT_HOME_BASES_STORAGE_KEY]: nextConfigured });
   invalidateLocalSnapshots('persistentHomeBases');
+  await updatePersistentHomeBaseRestorations((states) => {
+    const previous = states[previousExactUrl];
+    delete states[previousExactUrl];
+    if (previous?.tabId === Number(tab.id)) states[nextExactUrl] = previous;
+    return states;
+  });
   await updatePersistentHomeBaseAnchors((anchors) => {
     const nextAnchors = Object.fromEntries(Object.entries(anchors)
       .filter(([, url]) => duplicateKeyForUrl(url) !== previousExactUrl));
@@ -1489,6 +1525,7 @@ async function reconcilePersistentHomeBase(homeBaseUrl, {
   return queuePersistentHomeBaseRequest(exactUrl, async () => {
     const configured = await getPersistentHomeBases();
     if (!configured.includes(exactUrl)) {
+      await forgetPersistentHomeBaseRestoration(exactUrl);
       await updatePersistentHomeBaseAnchors((anchors) => Object.fromEntries(
         Object.entries(anchors).filter(([, url]) => duplicateKeyForUrl(url) !== exactUrl),
       ));
@@ -1521,12 +1558,25 @@ async function reconcilePersistentHomeBase(homeBaseUrl, {
       || [...candidates].sort((left, right) => Number(left.id) - Number(right.id))[0]
       || null;
     let created = false;
+    const restoration = (await getPersistentHomeBaseRestorations())[exactUrl];
     if (!keeper && createIfMissing) {
+      // A replacement may immediately redirect to sign-in. Persist the attempt
+      // before opening it, and never create another copy from that failed attempt.
+      if (restoration) return { status: 'restoration-suspended', homeBaseUrl: exactUrl, created: false };
+      await updatePersistentHomeBaseRestorations((states) => ({
+        ...states, [exactUrl]: { tabId: null, redirected: false },
+      }));
       const createProperties = { url: exactUrl, active: false };
       if (windowId !== null && Number.isInteger(Number(windowId))) createProperties.windowId = Number(windowId);
       if (index !== null && Number.isInteger(Number(index))) createProperties.index = Number(index) + 1;
       keeper = await chrome.tabs.create(createProperties);
+      await updatePersistentHomeBaseRestorations((states) => ({
+        ...states, [exactUrl]: { tabId: Number(keeper.id), redirected: false },
+      }));
       created = true;
+    } else if (keeper && restoration && Number(keeper.id) !== restoration.tabId) {
+      // A separately opened, matching tab is explicit recovery, not a timer retry.
+      await forgetPersistentHomeBaseRestoration(exactUrl);
     }
     const duplicateIds = candidates
       .filter((tab) => !keeper || Number(tab.id) !== Number(keeper.id))
@@ -1564,6 +1614,13 @@ async function handlePersistentHomeBaseTabUpdate(changeInfo, tab) {
   const currentHomeBase = persistentHomeBaseForUrl(changeInfo.url || tab.url, configured);
   if (anchoredUrl && currentHomeBase !== anchoredUrl) {
     const nextExactUrl = duplicateKeyForUrl(changeInfo.url || tab.url);
+    const restoration = (await getPersistentHomeBaseRestorations())[anchoredUrl];
+    if (restoration?.tabId === Number(tab.id) && !samePersistentHomeBasePage(anchoredUrl, nextExactUrl)) {
+      await updatePersistentHomeBaseRestorations((states) => ({
+        ...states, [anchoredUrl]: { tabId: Number(tab.id), redirected: true },
+      }));
+      return { status: 'restoration-suspended', homeBaseUrl: anchoredUrl, created: false };
+    }
     if (samePersistentHomeBasePage(anchoredUrl, nextExactUrl)) {
       return updatePersistentHomeBaseUrl(anchoredUrl, nextExactUrl, tab);
     }
@@ -1575,6 +1632,12 @@ async function handlePersistentHomeBaseTabUpdate(changeInfo, tab) {
     return { ...restored, status: 'restored' };
   }
   if (!currentHomeBase) return null;
+  const restoration = (await getPersistentHomeBaseRestorations())[currentHomeBase];
+  if (restoration?.tabId === Number(tab.id) && restoration.redirected) {
+    await updatePersistentHomeBaseRestorations((states) => ({
+      ...states, [currentHomeBase]: { tabId: Number(tab.id), redirected: false },
+    }));
+  }
   return reconcilePersistentHomeBase(currentHomeBase, {
     preferredTabId: tab.id,
     windowId: tab.windowId,
@@ -1599,6 +1662,11 @@ async function handlePersistentHomeBaseTabRemoved(tabId, removeInfo = {}) {
   const anchoredUrl = duplicateKeyForUrl(anchors[String(tabId)]);
   await forgetPersistentHomeBaseAnchor(tabId);
   if (!anchoredUrl || removeInfo.isWindowClosing === true) return null;
+  const restoration = (await getPersistentHomeBaseRestorations())[anchoredUrl];
+  if (restoration?.tabId === Number(tabId)) {
+    if (restoration.redirected) return { status: 'restoration-suspended', homeBaseUrl: anchoredUrl, created: false };
+    await forgetPersistentHomeBaseRestoration(anchoredUrl);
+  }
   return reconcilePersistentHomeBase(anchoredUrl, {
     windowId: removeInfo.windowId,
     createIfMissing: true,
@@ -1621,6 +1689,7 @@ async function setActiveTabPersistentHomeBase(windowId, enabled) {
     : current.filter((url) => url !== exactUrl));
   await chrome.storage.local.set({ [PERSISTENT_HOME_BASES_STORAGE_KEY]: next });
   invalidateLocalSnapshots('persistentHomeBases');
+  await forgetPersistentHomeBaseRestoration(exactUrl);
   if (enabled) {
     await reconcilePersistentHomeBase(exactUrl, {
       preferredTabId: activeTab.id,

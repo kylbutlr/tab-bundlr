@@ -90,6 +90,8 @@ One workspace can be designated as the Focus Group. Tabs manually placed there r
 
 **Keep as home base** remembers an exact HTTP or HTTPS URL and restores an inactive copy when the last copy disappears or navigates away. Query strings remain significant; hash fragments and trailing slashes are ignored.
 
+If an automatically restored copy navigates to a different page, including sign-in, Tab Bundlr suspends further replacements for that home base. Closing the failed copy or restarting the service worker does not retry it. The saved URL stays unchanged. A matching home-base tab or explicitly choosing **Keep as home base** again resumes restoration. This prevents redirect loops from opening an unlimited number of tabs.
+
 Fresh installations review exact home-base duplicates without closing them. The optional **Remove exact inactive duplicates automatically** setting may close only inactive, unpinned tabs whose normalized URL exactly matches the home base. General duplicate review always requires the user to select a keeper and confirm **Close extras**.
 
 ### Duplicate and stale review
