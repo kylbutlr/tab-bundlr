@@ -1,11 +1,17 @@
 // External IDs are opaque and only unique within their connection and workspace kind.
-export function sourceWorkspaceId(sourceId, workspaceId, workspaceType = 'workspace') {
+export function sourceWorkspaceId(sourceId, workspaceId, workspaceType = 'workspace', identity = null) {
+  if (identity) {
+    return `source:v2:${encodeURIComponent(JSON.stringify([sourceId, identity.provider, identity.authority,
+      identity.workspaceId, identity.accountId, identity.entityKind, workspaceType, String(workspaceId)]))}`;
+  }
   return `source:${encodeURIComponent(sourceId)}:${workspaceType === 'collection' ? 'collection' : 'workspace'}:${encodeURIComponent(workspaceId)}`;
 }
 
 // Retain existing Chrome groups and saved rules when persisted contexts prove ownership.
 // Ambiguous legacy destinations remain unchanged instead of guessing their provider.
 export function sourceIdentityMigration(stored, result) {
+  // An upgraded connection has no proof that a legacy group belongs to this account.
+  if (result.sourceIdentity) return {};
   const rawId = String(result.workspaceId);
   const workspaceType = result.workspaceType === 'collection' ? 'iteration' : 'epic';
   const id = sourceWorkspaceId(result.sourceId, rawId, result.workspaceType);

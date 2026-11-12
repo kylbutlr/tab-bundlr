@@ -46,7 +46,7 @@ test('rejects missing and unsupported source schema versions', () => {
     routes: [route],
   }), /schema version 1/);
   assert.throws(() => normalizeWorkspaceSource({
-    schemaVersion: 2,
+    schemaVersion: 5,
     id: 'tracker',
     name: 'Tracker',
     routes: [route],

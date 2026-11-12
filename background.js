@@ -4,7 +4,22 @@ import { createMessageHandler } from './message-router.js';
 import { batchedStorageUpdater } from './storage.js';
 import { createTrafficDiagnostic } from './traffic-diagnostic.js';
 import { createRuntimeDiagnostic } from './runtime-diagnostic.js';
+import { createRadarSessionReader, resolveRadarSessionMatch, resolveRadarProjectMatch, radarProjectSourcePreview } from './radar-session.js';
+import { restoreReadOnlyReload } from './reload-safety.js';
+import { createRadarDisposableTest } from './radar-disposable.js';
+// Restore holds before any session-backed policy or startup action is evaluated.
+let readOnlyReload = { held: true };
+const reloadSafetyReady = restoreReadOnlyReload(chrome).then((state) => { readOnlyReload = state; });
 const runtimeDiagnostic = createRuntimeDiagnostic();
+const readRadarSession = createRadarSessionReader(chrome);
+const runRadarDisposableTest = createRadarDisposableTest({ chromeApi: chrome, isHeld: () => readOnlyReload.held,
+  apply: (tab, result, options) => applyWorkspaceSourceResult(tab, result, 'radar-disposable-test', 'client', options),
+  undo: (action) => undoTabMoves(action),
+  cleanup: async (tabIds, sourceId, identity, projectId) => {
+    for (const id of tabIds) await forgetTabContext(id);
+    const workspaceId = sourceWorkspaceId(sourceId, projectId, 'workspace', identity);
+    await updateRecords((records) => Object.fromEntries(Object.entries(records).filter(([, record]) => record.epicId !== workspaceId)));
+  } });
 import {
   ACTIVITY_HISTORY_STORAGE_KEY,
   ACTIVATE_OPENED_TABS_STORAGE_KEY,
@@ -127,7 +142,7 @@ const pausedWindowIds = new Set();
 const UNFROZEN_WINDOW_IDS_STORAGE_KEY = 'unfrozenWindowIds';
 const unfrozenWindowIds = new Set();
 let freezeStateWrite = Promise.resolve();
-const freezeStateReady = chrome.storage.session.get(UNFROZEN_WINDOW_IDS_STORAGE_KEY)
+const freezeStateReady = reloadSafetyReady.then(() => chrome.storage.session.get(UNFROZEN_WINDOW_IDS_STORAGE_KEY))
   .then((stored) => {
     const ids = stored[UNFROZEN_WINDOW_IDS_STORAGE_KEY];
     if (Array.isArray(ids)) ids.filter(Number.isInteger).forEach((id) => unfrozenWindowIds.add(id));
@@ -148,8 +163,8 @@ let persistentHomeBaseRestorationsWrite = Promise.resolve();
 let focusHeldTabsReconcileRequest = null;
 let focusHeldTabsReconcileAgain = false;
 let sessionInitializationRequest = null;
-const settingsMigrationReady = ensureSettingsMigrated(chrome.storage.local).catch(() => null);
-const pausedWindowIdsReady = chrome.storage.session.get(PAUSED_WINDOW_IDS_STORAGE_KEY)
+const settingsMigrationReady = reloadSafetyReady.then(() => ensureSettingsMigrated(chrome.storage.local)).catch(() => null);
+const pausedWindowIdsReady = reloadSafetyReady.then(() => chrome.storage.session.get(PAUSED_WINDOW_IDS_STORAGE_KEY))
   .then((stored) => {
     const savedWindowIds = Array.isArray(stored[PAUSED_WINDOW_IDS_STORAGE_KEY])
       ? stored[PAUSED_WINDOW_IDS_STORAGE_KEY]
@@ -157,19 +172,19 @@ const pausedWindowIdsReady = chrome.storage.session.get(PAUSED_WINDOW_IDS_STORAG
     savedWindowIds.map(Number).filter(Number.isInteger).forEach((windowId) => pausedWindowIds.add(windowId));
   })
   .catch(() => {});
-const tabActivationHistoryReady = chrome.storage.session.get(TAB_ACTIVATION_HISTORY_STORAGE_KEY)
+const tabActivationHistoryReady = reloadSafetyReady.then(() => chrome.storage.session.get(TAB_ACTIVATION_HISTORY_STORAGE_KEY))
   .then((stored) => {
     tabActivationHistory = normalizeTabActivationHistory(stored[TAB_ACTIVATION_HISTORY_STORAGE_KEY]);
   })
   .catch(() => {});
-const windowAutomationPolicyReady = Promise.all([
+const windowAutomationPolicyReady = reloadSafetyReady.then(() => Promise.all([
   chrome.storage.session.get([
     WINDOW_AUTOMATION_MODE_STORAGE_KEY,
     SELECTED_WINDOW_IDS_STORAGE_KEY,
   ]),
   chrome.storage.local.get(WINDOW_AUTOMATION_PREFERENCE_STORAGE_KEY),
   chrome.windows.getAll({ windowTypes: ['normal'] }),
-])
+]))
   .then(async ([stored, localStored, windows]) => {
     const hasSessionPolicy = stored[WINDOW_AUTOMATION_MODE_STORAGE_KEY] === 'all'
       || stored[WINDOW_AUTOMATION_MODE_STORAGE_KEY] === 'selected';
@@ -901,7 +916,7 @@ async function preserveSourceWorkspace(result) {
       if (Object.keys(settings).length) await chrome.storage.local.set(settings);
       invalidateLocalSnapshots('trainedRules');
     }
-    return sourceWorkspaceId(result.sourceId, result.workspaceId, result.workspaceType);
+    return sourceWorkspaceId(result.sourceId, result.workspaceId, result.workspaceType, result.sourceIdentity);
   });
   sourceIdentityWrite = operation.catch(() => {});
   return operation;
@@ -1214,7 +1229,7 @@ async function appendLastAction(move) {
   return lastActionWrite;
 }
 
-async function moveTabToEpic(tab, context, reason) {
+async function moveTabToEpic(tab, context, reason, { recordMove = appendLastAction, organize = true } = {}) {
   if (tab?.pinned) return { moved: false, skipped: true, status: 'pinned-skipped', reason };
   const currentFocusRecord = await focusRecordForTab(tab);
   if (currentFocusRecord && String(context.smartGroupId || '') !== String(currentFocusRecord.smartGroupId || '')) {
@@ -1242,7 +1257,7 @@ async function moveTabToEpic(tab, context, reason) {
   try {
     await chrome.tabs.group({ tabIds: [tab.id], groupId: group.id });
     await rememberTabContext(tab.id, tabContextForEpic({ ...context, groupId: group.id, windowId: tab.windowId }));
-    await appendLastAction({
+    await recordMove({
       tabId: Number(tab.id),
       tabTitle: tab.title || tab.url || 'Tab',
       previousGroupId: currentGroupId,
@@ -1252,7 +1267,7 @@ async function moveTabToEpic(tab, context, reason) {
       url: tab.url || '',
       reason,
     });
-    maybeOrganizeWindow(tab.windowId).catch(() => {});
+    if (organize) maybeOrganizeWindow(tab.windowId).catch(() => {});
     return { moved: true, groupId: Number(group.id), reason };
   } finally {
     inFlightGroupMoves.delete(moveKey);
@@ -1344,11 +1359,35 @@ async function processWorkspaceSourceTab(tab, reason = 'workspace-source', {
   }
   const permissionRequired = { status: 'permission-required', sourceId: match.source.id };
   if (!await hasSourceOriginAccess(match.source.permissionOrigins)) return permissionRequired;
-  const result = await sourceResolver.resolve(match, settings.sourceSecrets, reason);
+  const result = match.source.schemaVersion === 4
+    ? await resolveRadarProjectMatch(match, tab, readRadarSession)
+    : match.source.schemaVersion === 3
+    ? await resolveRadarSessionMatch(match, tab, readRadarSession)
+    : await sourceResolver.resolve(match, settings.sourceSecrets, reason);
   if (!await hasSourceOriginAccess(match.source.permissionOrigins)) return permissionRequired;
   if (result.status !== 'resolved') return result;
+  const current = await chrome.storage.local.get([WORKSPACE_SOURCES_STORAGE_KEY, WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
+  const currentSource = normalizeWorkspaceSources(current[WORKSPACE_SOURCES_STORAGE_KEY])
+    .find((source) => source.id === match.source.id);
+  if (JSON.stringify(currentSource) !== JSON.stringify(match.source)
+    || JSON.stringify(current[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]?.[match.source.id] || {})
+      !== JSON.stringify(settings.sourceSecrets?.[match.source.id] || {})) {
+    return { status: 'source-changed', sourceId: match.source.id };
+  }
+  if (match.source.schemaVersion >= 3) {
+    const latest = await chrome.tabs.get(tab.id);
+    if (latest.url !== tab.url || latest.windowId !== tab.windowId) return { status: 'context-changed' };
+    if (latest.pinned) return { status: 'pinned-skipped' };
+    if (await isWindowPaused(latest.windowId)) return { status: 'window-paused' };
+    if (await tabIsInManualGroup(latest)) return { status: 'manual-group-protected' };
+    tab = latest;
+  }
+  return applyWorkspaceSourceResult(tab, result, reason, workspaceType);
+}
+
+async function applyWorkspaceSourceResult(tab, result, reason, workspaceType, moveOptions) {
   const workspaceId = await preserveSourceWorkspace(result);
-  if (workspaceType === 'client') {
+  if (workspaceType === 'client' && moveOptions?.persistCatalog !== false) {
     await rememberSavedClientGroups([{ epicId: workspaceId, epicName: result.workspaceName }]);
   }
   return moveTabToEpic(tab, tabContextForEpic({
@@ -1359,7 +1398,7 @@ async function processWorkspaceSourceTab(tab, reason = 'workspace-source', {
     storyId: result.itemId || null,
     source: `workspace-source:${result.sourceId}:${result.routeId}`,
     workspaceType: workspaceType === 'iteration' ? 'iteration' : 'epic',
-  }), reason);
+  }), reason, moveOptions);
 }
 
 async function tabIsInManualGroup(tab) {
@@ -2150,6 +2189,14 @@ async function undoActivity(activityIdValue = null) {
     : history[0];
   if (!action?.moves?.length) return { ok: false, message: 'There is no automatic action to undo.' };
 
+  const undone = await undoTabMoves(action);
+  await chrome.storage.local.set({
+    [ACTIVITY_HISTORY_STORAGE_KEY]: history.filter((candidate) => candidate.id !== action.id),
+  });
+  return { ok: true, undoneCount: undone.length, message: undone.length ? `Undid ${undone.length} automatic tab move${undone.length === 1 ? '' : 's'}.` : 'Nothing still matched the last automatic action.' };
+}
+
+async function undoTabMoves(action) {
   const undone = [];
   for (const move of [...action.moves].reverse()) {
     try {
@@ -2167,10 +2214,7 @@ async function undoActivity(activityIdValue = null) {
       // The user may have closed or moved the tab after the automatic action.
     }
   }
-  await chrome.storage.local.set({
-    [ACTIVITY_HISTORY_STORAGE_KEY]: history.filter((candidate) => candidate.id !== action.id),
-  });
-  return { ok: true, undoneCount: undone.length, message: undone.length ? `Undid ${undone.length} automatic tab move${undone.length === 1 ? '' : 's'}.` : 'Nothing still matched the last automatic action.' };
+  return undone;
 }
 
 function recordForGroup(records, groupId, windowId) {
@@ -3521,6 +3565,7 @@ async function forgetWindowAutomationState(windowId) {
 }
 
 chrome.tabs.onCreated.addListener((tab) => {
+  if (readOnlyReload.held) return;
   runtimeDiagnostic.record('created', { tabId: tab.id, sourceWindowId: tab.windowId });
   processCreatedTab(tab).catch(() => runtimeDiagnostic.record('routing', { reason: 'handler-failed', tabId: tab.id, sourceWindowId: tab.windowId }));
 });
@@ -3530,11 +3575,13 @@ chrome.tabs.onActivated?.addListener((activeInfo) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (readOnlyReload.held) return;
   if (!isRelevantTabUpdate(changeInfo) && changeInfo?.status !== 'loading') return;
   processUpdatedTab(changeInfo, tab).catch(() => {});
 });
 
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
+  if (readOnlyReload.held) return;
   runtimeDiagnostic.record('detached', { tabId, sourceWindowId: detachInfo?.oldWindowId });
   pendingNavigationCompletions.delete(Number(tabId));
   pendingExternalTabRoutes.delete(Number(tabId));
@@ -3543,12 +3590,14 @@ chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
 });
 
 chrome.tabs.onAttached.addListener((tabId, attachInfo) => {
+  if (readOnlyReload.held) return;
   processAttachedTab(tabId, attachInfo).catch(() => {
     detachedTabOrigins.delete(Number(tabId));
   });
 });
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  if (readOnlyReload.held) return;
   pendingNavigationCompletions.delete(Number(tabId));
   pendingExternalTabRoutes.delete(Number(tabId));
   freshExternalGroupTabs.delete(Number(tabId));
@@ -3560,11 +3609,13 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 });
 
 chrome.windows.onRemoved.addListener((windowId) => {
+  if (readOnlyReload.held) return;
   forgetWindowAutomationState(windowId).catch(() => {});
   forgetWindowTabActivationHistory(windowId).catch(() => {});
 });
 
 chrome.tabGroups.onCreated.addListener((group) => {
+  if (readOnlyReload.held) return;
   processCreatedGroup(group, { rememberPending: true })
     .then(() => reconcileFocusHeldTabs())
     .catch(() => {});
@@ -3578,7 +3629,7 @@ chrome.commands?.onCommand.addListener((command) => {
   if (command === PREVIOUS_TAB_COMMAND) activatePreviousTab().catch(() => {});
 });
 
-chrome.runtime.onMessage.addListener(createMessageHandler({
+const coreMessageHandler = createMessageHandler({
   RUNTIME_DIAGNOSTIC: (message) => ({ ok: true, version: chrome.runtime.getManifest?.().version,
     ...runtimeDiagnostic.command(message.action || 'get') }),
   POPUP_TIMING: (message) => {
@@ -3619,10 +3670,52 @@ chrome.runtime.onMessage.addListener(createMessageHandler({
     await reconcilePersistentHomeBases({ createIfMissing: true });
     return { ok: true };
   },
-}));
+});
+
+// Only Settings can request a selected-tab preview. No OAuth or MCP runtime path.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const actions = { READ_ONLY_PREVIEW_STATUS: async () => { await reloadSafetyReady; return { held: readOnlyReload.held }; },
+    RADAR_DISPOSABLE_TEST: async () => { await reloadSafetyReady;
+      const candidates = sender.tab ? [sender.tab] : (await chrome.tabs.query({ url: chrome.runtime.getURL('options.html') })).filter((tab) => tab.active);
+      if (candidates.length !== 1) throw Object.assign(new Error(), { code: 'settings-window-unavailable' });
+      const tab = candidates[0];
+      return { test: await runRadarDisposableTest(tab.windowId) };
+    },
+    READ_ONLY_PREVIEW_FINISH: async () => { await reloadSafetyReady; return readOnlyReload.finish(); }, RADAR_SESSION_PREVIEW: async () => {
+    if (!Number.isInteger(message.tabId) || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(message.connectionId || '')
+      || typeof message.workspaceName !== 'string' || !message.workspaceName.trim() || message.workspaceName.length > 120) {
+      throw Object.assign(new Error(), { code: 'invalid-preview' });
+    }
+    const stored = await chrome.storage.local.get(WORKSPACE_SOURCES_STORAGE_KEY);
+    const previous = normalizeWorkspaceSources(stored[WORKSPACE_SOURCES_STORAGE_KEY])
+      .find((source) => source.id === message.connectionId);
+    if (previous && previous.schemaVersion !== 4) throw Object.assign(new Error(), { code: 'new-source-id-required' });
+    return { source: radarProjectSourcePreview(await readRadarSession(message.tabId), message.connectionId, message.workspaceName, previous) };
+  } };
+  if (['RADAR_CONNECT', 'RADAR_CHECK', 'RADAR_STATUS', 'RADAR_DISCONNECT'].includes(message?.type)) {
+    sendResponse({ ok: false, code: 'oauth-retired', message: 'Radar now uses the optional extension session read.' });
+    return false;
+  }
+  if (!message || !Object.hasOwn(actions, message.type)) {
+    if (readOnlyReload.held && !['GET_STATUS', 'GET_REVIEW_DATA', 'GET_WINDOW_AUTOMATION_POLICY', 'RUNTIME_DIAGNOSTIC', 'POPUP_TIMING'].includes(message?.type)) {
+      sendResponse({ ok: false, code: 'read-only-preview', message: 'Finish the metadata-only test in Settings before moving tabs.' });
+      return false;
+    }
+    return coreMessageHandler(message, sender, sendResponse);
+  }
+  if (!sender?.id || sender.id !== chrome.runtime.id || sender?.url !== chrome.runtime.getURL?.('options.html')) {
+    sendResponse({ ok: false, code: 'access-denied', message: 'Open Tab Bundlr Settings to manage Radar sign-in.' });
+    return false;
+  }
+  actions[message.type]().then((result) => sendResponse({ ok: true, ...result })).catch((error) => {
+    sendResponse({ ok: false, code: error.code || 'read-unavailable', message: 'Radar read stopped. No source was saved and no tab was moved.' });
+  });
+  return true;
+});
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return;
+  if (readOnlyReload.held) return;
   if (changes[ENABLED_STORAGE_KEY] || changes[ACTIVATE_OPENED_TABS_STORAGE_KEY] || changes[OPENER_INHERITANCE_STORAGE_KEY] || changes[WORKSPACE_SOURCES_STORAGE_KEY] || changes[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]) {
     invalidateLocalSnapshots('settings');
   }
@@ -3666,6 +3759,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 async function initializeForSession() {
+  await reloadSafetyReady;
+  if (readOnlyReload.held) return { initialized: false, readOnlyPreview: true };
   if (sessionInitializationRequest) return sessionInitializationRequest;
   sessionInitializationRequest = (async () => {
     await settingsMigrationReady;

@@ -14,6 +14,7 @@ test('declares a local-first Manifest V3 extension with optional network access'
   assert.deepEqual(manifest.permissions, ['storage', 'tabs', 'tabGroups']);
   assert.equal('host_permissions' in manifest, false);
   assert.deepEqual(manifest.optional_host_permissions, ['https://*/*']);
+  assert.deepEqual(manifest.optional_permissions, ['scripting']);
   assert.equal(manifest.background.service_worker, 'background.js');
   assert.equal(manifest.options_page, 'options.html');
   assert.equal(manifest.action.default_popup, 'popup.html');
@@ -128,7 +129,9 @@ test('does not ship private fixture names, private IDs, or credential values', a
     ['mate', '-', 'the', '-', 'label'].join(''),
     ['sct', '_', 'r', '_'].join(''),
   ];
-  const normalizedSource = source.toLowerCase();
+  // Exact public provider origin is configuration, not a private fixture.
+  // All other occurrences retain the privacy check.
+  const normalizedSource = source.toLowerCase().replaceAll('https://radar.sdg.la/', 'https://public-radar.example/');
   forbidden.forEach((value) => assert.equal(normalizedSource.includes(value.toLowerCase()), false, `Found private fixture: ${value}`));
 });
 

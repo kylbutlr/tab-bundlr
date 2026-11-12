@@ -78,6 +78,8 @@
         <h2 id="connections-title">You approve every service address</h2>
         <p>Connections are visible JSON configurations. They can recognize supported page URLs, make HTTPS <code>GET</code> requests to listed addresses, and use selected response fields to choose a workspace. They cannot send request bodies, make write requests, run scripts, or follow redirects.</p>
         <p>Newly imported connections stay off. Before first access, Tab Bundlr shows the requested addresses and Chrome asks you to approve them. Credentials are stored separately from the JSON, excluded from settings exports, and sent only as the headers declared by that connection.</p>
+        <p>Radar uses an optional fixed metadata reader inside an already-open, signed-in ticket tab. Preview requests scripting and exact Radar-origin access only after you choose it. It opens no tabs, starts no OAuth, copies no credentials and does not scan history or poll. Review its disabled JSON source before saving or enabling it. Each read verifies the native viewer, workspace, ticket and project.</p>
+        <p>The native response can contain descriptions and events; these are discarded inside the isolated reader. Only grouping IDs leave that reader. No activity, manual-labor or daily-coverage claim is made. Local workspaces and Shortcut remain independent.</p>
       </section>
 
       <section id="support" class="content-section" aria-labelledby="support-title">
