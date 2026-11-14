@@ -1,5 +1,11 @@
 # Release verification
 
+## v1.3.0 release preparation
+
+The candidate is based on [PR #5's merged commit](https://github.com/kylbutlr/tab-bundlr/commit/ef79e2ab96636514cd2bbe5e607af4a769a7bcfb). Its [post-merge cloud CI](https://github.com/kylbutlr/tab-bundlr/actions/runs/43547078100) passed. Local candidate checks and exact artifact integrity are recorded separately in [the v1.3.0 preparation receipt](release-v1.3.0-receipt.json). The version bump does not change runtime code, styling, permissions or source schema.
+
+Browser automation remains stopped. No v1.3.0 installed-client acceptance or new provider read is claimed. The previously approved bounded native reload/import/Undo check below carries its recorded final-verification and cleanup limits. Candidate PR CI is separate from the earlier merged functional-runtime CI. Merge, tags and publication remain separately gated.
+
 ## Simplified public build, November 13, 2026
 
 The unpublished simplified build passed **187 offline Node tests**, App Stylr v1.4.1 generated-source/syntax checks and local packaging. The 46 packaged runtime payloads matched the locally activated runtime. See [the bounded native acceptance receipt](public-acceptance-check.json) and [review summary](public-cleanup-review.md).
