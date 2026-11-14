@@ -1,0 +1,56 @@
+{
+  "recordedAt": "2026-11-14T02:06:55.037950+00:00",
+  "clientDate": "2026-11-13",
+  "scope": "Bounded native reload and workspace JSON acceptance",
+  "simplifiedBuildActive": true,
+  "sameExtensionIdentityAndStorage": true,
+  "startupHandoffConsumed": true,
+  "preservationAfterReload": {
+    "settingsIncludingSourceDefinitionsAndCredentials": true,
+    "pauseFocusAndWindowProtections": true,
+    "workingTabsMetadata": true,
+    "groupsMetadata": true,
+    "workingTabsChecked": 7,
+    "localWorkspaceRuleCounts": [
+      20,
+      13
+    ],
+    "savedConnectedRuleCount": 61
+  },
+  "nativeWorkspaceImport": {
+    "previewPassed": true,
+    "syntheticWorkspaceAdded": true,
+    "undoPassed": true,
+    "originalVisibleWorkspaceCountsRestored": true,
+    "realTabsOpenedGroupedOrClosedByAgent": 0
+  },
+  "validation": {
+    "offlineTestsPassed": 187,
+    "offlineTestsFailed": 0,
+    "packageFiles": 46,
+    "loadedRuntimeMatchesPackage": true,
+    "packageSha256": "9aa676e2c16ad1b9279394d7a25f946d581bdaaf41f2fa688b57cf70c9a6175a",
+    "realRadarRead": "not performed",
+    "realShortcutRead": "not performed"
+  },
+  "limitations": [
+    "Final post-Undo aggregate hash verification and screenshot were blocked by browser protocol policy; no alternate browser surface was used after the denial.",
+    "An inactive salted verification baseline and null import-Undo record remain in extension storage. No automation hold or session handoff remains.",
+    "Native tab grouping was intentionally not exercised on working tabs; no disposable browser tabs were created."
+  ],
+  "cleanup": {
+    "browserAutomationStopped": true,
+    "taskProcessesRunning": 0,
+    "previewServersStarted": 0,
+    "dependencySymlinkRemoved": true,
+    "temporaryHelperFilesRetainedForDeferredCleanup": true
+  },
+  "sourceHandling": {
+    "runtimeOverlayChangedFiles": 12,
+    "originalRuntimeAndDirtyDiffBackedUp": true,
+    "unrelatedFilesPreserved": true,
+    "originalHeadAndIndexPreserved": true
+  },
+  "pushed": false,
+  "published": false
+}

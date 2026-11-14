@@ -1,10 +1,12 @@
 # Release verification
 
-## 1.2.0 local candidate, November 12, 2026
+## Simplified public build, November 13, 2026
 
-Current candidate checks and acceptance limits are recorded in [the 1.2.0 release notes](release-notes-v1.2.0.md) and [sanitized receipt](release-v1.2.0-receipt.json). The isolated candidate passed 190 Node tests, App Stylr/syntax checks and packaging. Chrome verified v1.2.0 after a protected reload, with two disposable tabs grouped and restored through Undo, zero test tabs retained and zero Radar requests from the controller. Current user-confirmed rule counts and visible protections were preserved. Nothing has been published.
+The unpublished simplified build passed **187 offline Node tests**, App Stylr v1.4.1 generated-source/syntax checks and local packaging. The 46 packaged runtime payloads matched the locally activated runtime. See [the bounded native acceptance receipt](public-acceptance-check.json) and [review summary](public-cleanup-review.md).
 
-The sections below preserve historical 1.0.0 evidence and do not establish 1.2.0 release acceptance.
+The approved native reload retained the existing extension identity and storage. Checksums matched the saved settings/credentials, pause/focus/window protections, working tabs and Chrome groups across reload. Native workspace JSON preview, synthetic import and import Undo succeeded. Browser automation then stopped. No live Radar or Shortcut request, disposable-tab grouping check, or full release acceptance was performed. Final post-Undo aggregate verification and cleanup were blocked by browser protocol policy; an inactive verification record remains.
+
+These bounded results do not establish new provider authentication or full native-feature acceptance. The sections below preserve historical 1.0.0 evidence and remain specific to that version.
 
 Version 1.0.0 uses open-source GitHub distribution: a versioned ZIP installed unpacked in Chrome, with privacy and support information in this repository. Chrome Web Store submission is outside this release's scope. The checks below distinguish automated behavior, disposable Chromium checks, native browser observations, and accepted verification limits. Historical v0.8 checks are not current release evidence.
 

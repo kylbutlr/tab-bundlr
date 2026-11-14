@@ -41,6 +41,27 @@
           <p id="smart-group-status" class="status" role="status" aria-live="polite"></p>
         </form>
         <div id="smart-groups" class="trained-rules" aria-live="polite"></div>
+      <details class="workspace-import">
+        <summary>Import or export workspaces</summary>
+        <p class="field-help">Load a workspace JSON file or paste one below. Preview additions and updates before saving. Your preferences, protections and connected workspace rules stay as they are. <a href="help.html#workspace-import">See the JSON format</a>.</p>
+        <form id="workspace-import-form">
+          <label for="workspace-import-json">Workspace JSON</label>
+          <textarea id="workspace-import-json" rows="7" spellcheck="false" maxlength="262144" required placeholder='{"format":"tab-bundlr-workspaces","version":1,"workspaces":[{"id":"docs","name":"Documentation","urls":["https://docs.example.com/"]}]}'></textarea>
+          <div class="actions">
+            <button type="submit">Preview workspaces</button>
+            <button id="workspace-import-choose" type="button" class="secondary">Choose JSON file</button>
+            <button id="workspace-export" type="button" class="secondary">Export workspaces</button>
+            <input id="workspace-import-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </form>
+        <div id="workspace-import-preview" hidden>
+          <h3>Review workspace changes</h3>
+          <ul id="workspace-import-rows" class="workspace-import-rows"></ul>
+          <button id="workspace-import-apply" type="button" disabled>Import selected workspaces</button>
+        </div>
+        <button id="workspace-import-undo" type="button" class="secondary" disabled>Undo last workspace import</button>
+        <p id="workspace-import-status" class="status" role="status" aria-live="polite"></p>
+      </details>
       <details class="saved-workspace-rules">
         <summary>Rules for connected and existing workspaces</summary>
         <p class="field-help">Save a URL prefix to a workspace from the popup, or add and edit rules here. A more specific saved workspace rule can override a broader Workspace prefix.</p>
@@ -212,33 +233,6 @@
       <details class="card settings-disclosure">
         <summary>Connections (optional)</summary>
       <section>
-        <h2>Radar browser session</h2>
-        <button id="radar-all-projects" type="button" class="secondary">Read all Radar projects</button>
-        <button id="radar-enable-projects" type="button" class="secondary" disabled>Enable grouping for these projects</button>
-        <button id="radar-undo-projects" type="button" class="secondary" disabled>Undo project expansion</button>
-        <pre id="radar-catalog-status" class="field-help" role="status" aria-live="polite"></pre>
-        <p class="field-help">For a metadata-only acceptance check, preserve current session holds and reload without startup organization or home-base creation. Finish the test to resume normal handling without replaying startup moves.</p>
-        <button id="radar-safe-reload" type="button" class="secondary">Reload for metadata-only test</button>
-        <button id="radar-finish-test" type="button" class="secondary">Finish metadata-only test</button>
-        <p id="radar-reload-status" class="status" role="status" aria-live="polite"></p>
-        <button id="radar-disposable-test" type="button" class="secondary">Test grouping and Undo on two disposable tabs</button>
-        <p id="radar-disposable-status" class="status" role="status" aria-live="polite">No disposable test performed. This test uses synthetic metadata and makes no Radar requests.</p>
-        <p class="field-help">Read one already-open native Radar ticket using your signed-in Chrome session. No new tab, OAuth, API token, background scan or polling. Nothing is saved or moved by this preview.</p>
-        <form id="radar-connection-form" class="client-rule-form">
-          <label for="radar-tab">Open Radar ticket</label>
-          <select id="radar-tab" required></select>
-          <button id="radar-refresh-tabs" type="button" class="secondary">List open ticket tabs</button>
-          <label for="radar-source-id">New connection ID</label>
-          <input id="radar-source-id" value="radar-projects" required pattern="[a-z0-9][a-z0-9._-]{0,63}" maxlength="64" autocomplete="off">
-          <label for="radar-workspace-name">Workspace name for this ticket's native project</label>
-          <input id="radar-workspace-name" required maxlength="120" autocomplete="off">
-          <p class="field-help">Review this label for the ticket's native project ID. The source will cover other native ticket URLs in reviewed projects and leave unknown projects unassigned. Reuse the same project connection ID to preview adding a project. Older exact-ticket sources require a new ID. No source is saved by preview. Access is limited to https://radar.sdg.la/* and optional scripting.</p>
-          <button type="submit">Read metadata and preview source</button>
-          <pre id="radar-client-document" class="radar-client-document" hidden></pre>
-          <button id="radar-use-preview" type="button" class="secondary" disabled>Copy preview to source editor</button>
-          <p id="radar-connection-status" class="status" role="status" aria-live="polite">No read performed. Local workspaces and Shortcut work independently.</p>
-        </form>
-        <p class="field-help">Review the JSON, save the source disabled, then explicitly turn it on if desired. Each match rechecks viewer, workspace, ticket and project. Sign-in failures stop without opening login or retrying. Imported sources stay off. This selected-ticket path makes no activity, labor, revision-history or full-day coverage claim.</p>
         <h2>Connections from JSON</h2>
         <p class="field-help">A connection can match supported pages and read workspace names from an HTTPS service. Its JSON, requested addresses, and credentials remain visible here. New connections stay off until you review and enable them. <a href="help.html#connections">Learn how connections handle data</a>.</p>
         <div id="workspace-sources" class="trained-rules" aria-live="polite"></div>
@@ -312,8 +306,7 @@
       </form>
     </dialog>
     <script type="module" src="options.js"></script>
+    <script type="module" src="workspace-import-options.js"></script>
     <script type="module" src="traffic-options.js"></script>
-    <script type="module" src="radar-options.js"></script>
-    <script type="module" src="radar-catalog-options.js"></script>
   </body>
 </html>

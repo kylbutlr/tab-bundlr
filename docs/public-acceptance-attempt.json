@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-14T01:50:58.901350+00:00",
+  "scope": "Bounded installed simplified-build acceptance",
+  "result": "stopped before reload",
+  "observedInstalledVersion": "1.2.0",
+  "installedSource": "original custom checkout",
+  "simplifiedBuildInstalled": false,
+  "extensionReloaded": false,
+  "sourceFilesReplaced": false,
+  "settingsWrites": false,
+  "permissionChanges": false,
+  "agentCreatedTabs": 0,
+  "agentTabOrganization": false,
+  "browserAutomationStopped": true,
+  "reason": "Chrome focus changed during the approved window. Native navigation timed out; readback showed a different user work page, with the Extensions control tab still at extension details. No navigation was retried.",
+  "localTests": "181 passed in the preceding local-cleanup pass; not rerun in this attempt",
+  "installedAcceptance": "unverified",
+  "push": false,
+  "publish": false
+}

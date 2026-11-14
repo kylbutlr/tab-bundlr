@@ -4,7 +4,7 @@ Workspace Sources are optional declarative JSON profiles. They convert a provide
 
 ## Security boundaries
 
-- Schema versions 1 and 2 remain valid; versions 3 and 4 are restricted to the fixed Radar tab-session transport
+- The public build supports schema versions 1 and 2 only
 - HTTPS page and request URLs only
 - `GET` requests only
 - No request bodies or arbitrary headers containing embedded values
@@ -55,19 +55,9 @@ Version-2 steps may include `expect`, a map of dotted response paths to literal 
 
 `upgradeWorkspaceSource(source, identity)` prepares a disabled version-2 copy without changing storage or existing groups. Review a new connection ID before saving it. Saving a source clears its previous credentials to prevent rebinding an old account's secret to an edited definition. No automatic conversion is performed. Version-2 sources do not adopt legacy group ownership without explicit evidence. Backups retain both schemas; imports remain disabled and credential-free. Older builds cannot restore version-2 sources, so preserve an original backup before converting.
 
-## Version 3 Radar tab session
+## Unsupported custom sources
 
-Version 3 narrowly extends the authentication boundary, retaining version-2 identity and expectations but requiring `authentication: { "type": "radar-tab-session" }`, no credentials, only `https://radar.sdg.la/*`, explicit UUID/number pairs and project IDs, exact ticket routes and one fixed ticket-get step. The generic request engine rejects it; only the app-owned isolated extension reader executes it.
-
-Settings previews one selected native ticket and its authenticated viewer context. It proposes exact native/short routes for that observed UUID/number pair, with a user-reviewed label for the project ID. It enumerates no other tickets. Saving keeps it disabled; enablement is separate. Account/workspace/project changes, authentication errors and deleted records fail closed. Each resolution verifies context afresh; Radar successes do not enter the five-minute generic cache.
-
-No source upgrades automatically. Backups retain version 3 without credentials; imports disable it. Versions 1/2, Shortcut conversion, stored rules and ownership remain intact. Older builds reject version 3; retain a pre-change backup and disable or remove this source before rollback. Development has not modified real settings. See [implementation and acceptance limits](radar-extension-session.md).
-
-## Version 4 Radar project bindings
-
-Version 4 retains the closed `radar-tab-session` transport, exact Radar origin and provider/account/workspace identity. It uses one fixed native-ticket route with a captured UUID, plus a nonempty `projects` list of reviewed `{ id, name }` bindings. UUIDs and labels are validated, duplicate project IDs are rejected and arbitrary session request routes are prohibited. Only tickets whose returned project ID appears in that list resolve. The generic fetch engine still cannot execute these profiles.
-
-A schema-4 preview can explicitly add or rename a project in the same scoped connection. Version-3 sources are not automatically converted or broadened. Backups preserve the new source; imports disable it and carry no credentials. Short numbers are not resolved through an invented endpoint; the native ticket route is required. See [project grouping and acceptance](radar-project-grouping.md).
+Definitions from a custom build are retained in local storage, but unsupported schema versions cannot execute in this public build. Editing an ordinary source does not discard the other definitions. Normal public backups export supported sources only. Preserve the original custom build and its backup when switching variants; this branch does not switch, install or reload anything automatically.
 
 ## Optional Shortcut profile
 

@@ -74,11 +74,18 @@
         <p class="policy-link">The policy is also available in the <a href="https://github.com/kylbutlr/tab-bundlr/blob/main/docs/privacy.md">Tab Bundlr source repository</a>.</p>
       </section>
 
+      <section id="workspace-import" class="card">
+        <h2>Import workspaces</h2>
+        <p>In Settings, expand Import or export workspaces under Workspaces. Paste JSON or choose a file, preview it, then import the selected rows. Updates keep existing URL prefixes. Preferences, connected rules, credentials and temporary protections are unchanged.</p>
+        <pre>{"format":"tab-bundlr-workspaces","version":1,"workspaces":[{"id":"docs","name":"Documentation","urls":["https://docs.example.com/product"]}]}</pre>
+        <p>Keep each ID stable to update that workspace later. Export workspaces to get existing local IDs. Matching names alone never merge workspaces. Equal-prefix conflicts are blocked; broader overlaps are shown for review.</p>
+        <p>Saving or undoing an import leaves existing tabs in place. Apply rules in the popup when ready. Automatic mode continues to handle future navigation. Import Undo affects workspace settings; tab moves use their separate popup Undo.</p>
+      </section>
+
       <section id="connections" class="content-section" aria-labelledby="connections-title">
         <h2 id="connections-title">You approve every service address</h2>
         <p>Connections are visible JSON configurations. They can recognize supported page URLs, make HTTPS <code>GET</code> requests to listed addresses, and use selected response fields to choose a workspace. They cannot send request bodies, make write requests, run scripts, or follow redirects.</p>
         <p>Newly imported connections stay off. Before first access, Tab Bundlr shows the requested addresses and Chrome asks you to approve them. Credentials are stored separately from the JSON, excluded from settings exports, and sent only as the headers declared by that connection.</p>
-        <p>Radar uses an optional fixed metadata reader inside an already-open, signed-in ticket tab. Preview requests scripting and exact Radar-origin access only after you choose it. It opens no tabs, starts no OAuth, copies no credentials and does not scan history or poll. Review its disabled JSON source before saving or enabling it. Each read verifies the native viewer, workspace, ticket and project.</p>
         <p>The native response can contain descriptions and events; these are discarded inside the isolated reader. Only grouping IDs leave that reader. No activity, manual-labor or daily-coverage claim is made. Local workspaces and Shortcut remain independent.</p>
       </section>
 
