@@ -2,13 +2,18 @@
 
 Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases). Users install the extracted ZIP using Chrome's **Load unpacked** control and update it manually. Chrome Web Store registration, submission, screenshots, and dashboard disclosures are outside this release's scope.
 
-## Local public cleanup
+## v1.3.0 preparation
 
-This branch is an unpublished successor preparation. No release number is assigned and the source manifest retains its existing version during local review. Local test ZIPs must not replace an existing published asset. Current release tags, assets and historical receipts are unchanged.
+Version **1.3.0 is an unpublished release candidate** based on the simplified public build merged in [PR #5](https://github.com/kylbutlr/tab-bundlr/pull/5), commit `ef79e2ab96636514cd2bbe5e607af4a769a7bcfb`. Its [post-merge CI](https://github.com/kylbutlr/tab-bundlr/actions/runs/43547078100) passed, including cloud browser smoke and packaging. This preparation changes version metadata and documentation; functional runtime payloads are unchanged.
 
-The public package excludes custom session readers, custom provider UI, scripting permission and developer acceptance controls. It adds workspace-only JSON import with preview and guarded settings Undo. The home-base redirect-loop fix remains. See [workspace import](workspace-import.md), [local validation](verification.md) and [custom integration separation](../custom/radar/README.md).
+The public package excludes custom session readers, custom provider UI, scripting permission and developer acceptance controls. It provides workspace-only JSON import with preview and guarded settings Undo. The home-base redirect-loop fix, tab protections, Shortcut compatibility and App Stylr v1.4.1 pin remain. See [candidate notes](release-notes-v1.3.0.md), [candidate receipt](release-v1.3.0-receipt.json) and [workspace import](workspace-import.md).
 
-The public repository continues to provide installation, privacy, support and MIT license documentation. Publication, installation/reload and any new release number require a separate authorized step.
+Local artifacts:
+
+- `dist/tab-bundlr-1.3.0.zip`: the explicit 46-file public runtime package, including licenses.
+- `dist/tab-bundlr-1.3.0.sha256`: checksum for that exact ZIP.
+
+Preparation and a release PR do not publish either asset. Do not replace the existing v1.2.0 assets. After this PR is reviewed/merged, verify that merged source and its CI before any separately approved tag/release publication. Local browser automation remains stopped; no v1.3.0 installation or reload is performed by preparation. Earlier receipts remain historical and unchanged.
 
 ## Maintainer sequence
 

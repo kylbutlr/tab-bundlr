@@ -14,7 +14,7 @@ App preview of Tab Bundlr 1.1.0 with demo data. The browser sidebar is an illust
 
 ## Status
 
-This branch prepares a simpler public app with workspace-only JSON import. It is local work, not a new release. The public runtime contains no custom provider session reader or provider-specific test controls. Existing release tags and artifacts are unchanged.
+Version **1.3.0** is an **unpublished release candidate** for the simplified public app and workspace-only JSON import. The public package excludes custom provider session readers and provider-specific test controls. See [candidate release notes](docs/release-notes-v1.3.0.md) for changes and verification limits. Existing published tags and assets remain unchanged.
 
 Tab Bundlr is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
 
