@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Separate custom provider acquisition from the public extension runtime and settings.
+- Add workspace-only JSON import/export with preview, selection, conflict checks and guarded settings Undo.
+- Preserve the home-base redirect-loop fix, local protections and existing Shortcut compatibility.
+
+
 ## 1.2.0 (local release candidate, unpublished)
 
 - Add optional Radar project grouping through the existing signed-in Chrome session, with reviewed native project bindings and a guarded catalog expansion/Undo flow.

@@ -10,7 +10,6 @@ import {
   SETTINGS_VERSION_STORAGE_KEY,
   WORKSPACE_SOURCE_SECRETS_STORAGE_KEY,
   WORKSPACE_SOURCES_STORAGE_KEY,
-  normalizeWorkspaceSources,
 } from './sources.js';
 
 const LEGACY_PROFILE_KEYS = [
@@ -59,7 +58,9 @@ export function migrateLegacySettings(stored) {
       freshInstall: false,
       settings: {
         [SETTINGS_VERSION_STORAGE_KEY]: CURRENT_SETTINGS_VERSION,
-        [WORKSPACE_SOURCES_STORAGE_KEY]: normalizeWorkspaceSources(source[WORKSPACE_SOURCES_STORAGE_KEY]),
+        // Keep unsupported custom definitions intact in storage. The runtime validates before use.
+        [WORKSPACE_SOURCES_STORAGE_KEY]: Array.isArray(source[WORKSPACE_SOURCES_STORAGE_KEY])
+          ? source[WORKSPACE_SOURCES_STORAGE_KEY] : [],
         [WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]: plainObject(source[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]),
         [HOME_BASE_DUPLICATE_ACTION_STORAGE_KEY]: homeBaseDuplicateActionFromStorage(source[HOME_BASE_DUPLICATE_ACTION_STORAGE_KEY]),
         [OPENER_INHERITANCE_STORAGE_KEY]: openerInheritanceFromStorage(source[OPENER_INHERITANCE_STORAGE_KEY]),

@@ -2,24 +2,13 @@
 
 Tab Bundlr is distributed as MIT-licensed source and a versioned extension ZIP through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases). Users install the extracted ZIP using Chrome's **Load unpacked** control and update it manually. Chrome Web Store registration, submission, screenshots, and dashboard disclosures are outside this release's scope.
 
-## Current release
+## Local public cleanup
 
-The current published release is [v1.1.1](https://github.com/kylbutlr/tab-bundlr/releases/tag/v1.1.1), published November 7, 2026. It contains installation/saved-rule guidance and development dependency fixes and predates the Radar integration.
+This branch is an unpublished successor preparation. No release number is assigned and the source manifest retains its existing version during local review. Local test ZIPs must not replace an existing published asset. Current release tags, assets and historical receipts are unchanged.
 
-Version **1.2.0** is prepared locally and is **not published**. It contains the merged optional Radar grouping, home-base redirect-loop fix and PR review safeguards. See [candidate release notes and acceptance](release-notes-v1.2.0.md). Publication remains gated on the recorded acceptance results and explicit approval.
+The public package excludes custom session readers, custom provider UI, scripting permission and developer acceptance controls. It adds workspace-only JSON import with preview and guarded settings Undo. The home-base redirect-loop fix remains. See [workspace import](workspace-import.md), [local validation](verification.md) and [custom integration separation](../custom/radar/README.md).
 
-Version 1.1.0 applies the App Stylr visual refresh and high-resolution Graphite icons. See [v1.1.0 notes](release-notes-v1.1.0.md) for exact verification coverage and remaining native-browser limits. Historical v1.0.0 evidence below remains specific to that version.
-
-## Release assets
-
-For the unpublished version 1.2.0 candidate:
-
-- `tab-bundlr-1.2.0.zip`: extension runtime, bundled font licenses, and MIT license.
-- `tab-bundlr-1.2.0.sha256`: checksum for the exact local candidate ZIP.
-
-These local artifacts are not release assets until publication is explicitly approved. Historical published artifacts are unchanged.
-
-The repository also provides the [installation guide](installation.md), [privacy policy](privacy.md), [support guide](support.md), and [MIT License](../LICENSE). Do not include settings exports, browser profiles, private screenshots, or credentials in release assets.
+The public repository continues to provide installation, privacy, support and MIT license documentation. Publication, installation/reload and any new release number require a separate authorized step.
 
 ## Maintainer sequence
 

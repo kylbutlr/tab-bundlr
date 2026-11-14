@@ -14,7 +14,7 @@ App preview of Tab Bundlr 1.1.0 with demo data. The browser sidebar is an illust
 
 ## Status
 
-Version **1.2.0** is a local, unpublished release candidate adding optional Radar project grouping and home-base redirect-loop protection. See the [candidate release notes](docs/release-notes-v1.2.0.md) for changes and acceptance limits. The published **1.1.1** package remains available from GitHub Releases. The App Stylr v1.4.1 pin is unchanged.
+This branch prepares a simpler public app with workspace-only JSON import. It is local work, not a new release. The public runtime contains no custom provider session reader or provider-specific test controls. Existing release tags and artifacts are unchanged.
 
 Tab Bundlr is distributed through [GitHub Releases](https://github.com/kylbutlr/tab-bundlr/releases) under the MIT License. Download the ZIP and install it through Chrome's **Load unpacked** control. The core workflow needs no account, password, API token, or external integration. See [release verification](docs/verification.md) for tested behavior and accepted verification limits.
 
@@ -120,16 +120,20 @@ The worker checks current Chrome host access before resolving a connection, befo
 
 See [Workspace Source format](docs/workspace-sources.md) and the neutral [example tracker profile](examples/workspace-sources/example-tracker.json). Shortcut compatibility is provided by the same public schema, not a private execution path. Existing pre-v2 installations migrate their prior setup into a visible source profile.
 
-The optional [Radar project source](docs/radar-project-grouping.md) uses the already-verified extension session reader and groups native ticket pages by reviewed native project IDs. New tickets in a reviewed project share its destination; unknown projects stay unassigned. Source previews remain disabled and require explicit review and enablement. Installed disposable grouping and Undo passed without Radar requests. Local rules, Shortcut, manual groups, pinned tabs, pause/focus holds, backup compatibility and history remain independent. No source or alias migrates automatically.
 
-The explicit [Radar project catalog review](docs/radar-project-catalog.md) can expand an existing project connection from the native browser catalog, retaining prior bindings and labels. It provides a separate enable action and guarded source-expansion Undo. It uses the existing Radar tab and native session renewal without extracting credentials. There is no catalog polling or automatic provider synchronization.
+## Import workspaces from JSON
+
+Open **Settings → Workspaces → Import or export workspaces**. Choose a file or paste JSON, select **Preview workspaces**, review changes, then **Import selected workspaces**. IDs identify local workspaces, not a provider's ticket numbers. Updates retain existing URL rules and focus settings. Preferences, connected rules, credentials, history and temporary protections are not imported or replaced.
+
+Existing tabs stay in place when an import is saved or undone. Use **Apply rules** when ready; automatic mode still handles later tab creation and navigation. **Undo last workspace import** restores workspace settings only while those settings remain unchanged. Tab moves have their own Undo in the popup.
+
+See the [small JSON example](examples/workspaces.json) and [workspace import guide](docs/workspace-import.md). Optional custom converters produce the same portable file outside the extension package.
 
 ## Backup and import
 
 Settings backups include rules, source definitions, colors, ordering, behavior preferences, and home-base URLs. They exclude:
 
 - Workspace Source credentials and legacy tokens
-- Radar OAuth credentials, connection receipts and pending sign-in state
 - Open tabs and tab activation history
 - Chrome group and window IDs
 - Paused-window state and temporary focus holds
@@ -145,9 +149,7 @@ Tab Bundlr has no hosted backend, cloud synchronization, telemetry, advertising 
 - `tabs` reads tab URLs and titles and performs visible tab moves, activation, and user-confirmed closure.
 - `tabGroups` creates, updates, and orders managed Chrome groups.
 - Optional `https://*/*` host access allows a user-authored Workspace Source to request its declared HTTPS API origin. Tab Bundlr requests exact origins only when the user enables that source.
-- Optional `scripting`, together with exact `https://radar.sdg.la/*` access, permits the fixed Radar metadata reader in an existing ticket tab. Access is requested only by an explicit preview or source-enablement action. No cookie, webRequest, identity, Google API or browser email permission is requested.
 
-The optional Radar reader runs in Chrome's isolated extension world in the selected ticket tab. It returns only native grouping IDs, never descriptions, comments, credentials or email addresses. No analytics is included.
 
 See the complete [privacy policy](docs/privacy.md) and [Workspace Source security model](docs/workspace-sources.md).
 

@@ -1,4 +1,3 @@
-import { validateRadarSessionSource } from './radar-session.js';
 export const WORKSPACE_SOURCES_STORAGE_KEY = 'workspaceSources';
 export const WORKSPACE_SOURCE_SECRETS_STORAGE_KEY = 'workspaceSourceSecrets';
 export const SETTINGS_VERSION_STORAGE_KEY = 'settingsVersion';
@@ -122,8 +121,8 @@ function normalizeRoute(route, index) {
 export function normalizeWorkspaceSource(value) {
   const source = plainObject(value);
   const version = Number(source.schemaVersion);
-  if (![1, 2, 3, 4].includes(version)) {
-    throw new Error('Workspace Sources must use schema version 1, 2, 3 or 4.');
+  if (![1, 2].includes(version)) {
+    throw new Error('Workspace Sources must use schema version 1 or 2.');
   }
   if (version === 1 && (source.identity || source.authentication)) {
     throw new Error('Identity and authentication declarations require source schema version 2.');
@@ -133,7 +132,7 @@ export function normalizeWorkspaceSource(value) {
   }
   const identity = version >= 2 ? normalizeSourceIdentity(source.identity) : null;
   const authentication = version >= 2 ? plainObject(source.authentication) : null;
-  if (authentication && !(version >= 3 ? ['radar-tab-session'] : ['none', 'header']).includes(authentication.type)) {
+  if (authentication && !['none', 'header'].includes(authentication.type)) {
     throw new SourceAuthenticationError('This source needs an independently verified authentication method. OAuth, browser sessions and unavailable authentication cannot be enabled.', 'authentication-unavailable');
   }
   if (authentication && Object.keys(authentication).some((key) => key !== 'type')) {
@@ -168,7 +167,7 @@ export function normalizeWorkspaceSource(value) {
       };
     })
     .filter(Boolean);
-  if (authentication && authentication.type !== 'radar-tab-session' && ((authentication.type === 'none') !== (credentials.length === 0))) {
+  if (authentication && ((authentication.type === 'none') !== (credentials.length === 0))) {
     throw new Error('Source authentication must match its credential declarations.');
   }
   const routes = (Array.isArray(source.routes) ? source.routes : [])
@@ -185,10 +184,7 @@ export function normalizeWorkspaceSource(value) {
     permissionOrigins,
     credentials,
     routes,
-    ...(version === 4 ? { projects: (Array.isArray(source.projects) ? source.projects : [])
-      .map((project) => ({ id: project?.id, name: project?.name })) } : {}),
   };
-  if (version >= 3) validateRadarSessionSource(normalized);
   return normalized;
 }
 
@@ -205,8 +201,8 @@ export function workspaceSourceSaveChanges(stored, value) {
   const secrets = { ...plainObject(stored[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]) };
   delete secrets[source.id];
   return {
-    [WORKSPACE_SOURCES_STORAGE_KEY]: [...normalizeWorkspaceSources(stored[WORKSPACE_SOURCES_STORAGE_KEY])
-      .filter((candidate) => candidate.id !== source.id), source],
+    [WORKSPACE_SOURCES_STORAGE_KEY]: [...(Array.isArray(stored[WORKSPACE_SOURCES_STORAGE_KEY]) ? stored[WORKSPACE_SOURCES_STORAGE_KEY] : [])
+      .filter((candidate) => candidate?.id !== source.id), source],
     [WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]: secrets,
   };
 }
@@ -327,7 +323,6 @@ export async function resolveWorkspaceSourceMatch(
   { requestTimeoutMs = DEFAULT_SOURCE_REQUEST_TIMEOUT_MS } = {},
 ) {
   const source = normalizeWorkspaceSource(match.source);
-  if (source.schemaVersion >= 3) throw new SourceAuthenticationError('Radar requires its own extension tab transport.', 'extension-session-required');
   const { route, captures } = match;
   if (!source.enabled) return { status: 'disabled', sourceId: source.id };
   const context = { ...captures };

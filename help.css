@@ -37,3 +37,5 @@ code { color: var(--text); font-family: "Geist Mono", monospace; font-size: .9em
   h1 { font-size: 34px; }
   .action-list, .privacy-grid { grid-template-columns: 1fr; }
 }
+
+#workspace-import pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }

@@ -1,7 +1,3 @@
-// Clean up historical keys on import without loading the retired OAuth path.
-const RADAR_CONNECTION_KEY = 'radarOAuthConnection';
-const RADAR_PENDING_KEY = 'radarOAuthPending';
-import { RADAR_SESSION_PERMISSIONS } from './radar-session.js';
 import {
   ACTIVATE_OPENED_TABS_STORAGE_KEY,
   ACTIVITY_HISTORY_STORAGE_KEY,
@@ -233,8 +229,6 @@ async function importSettings(file) {
     if (!window.confirm('Import these Tab Bundlr settings? Supplied values will update the current settings and clear saved connection credentials.')) return;
     const current = await chrome.storage.local.get(BACKUP_STORAGE_KEYS);
     const settings = settingsImportChanges(current, backup.settings);
-    await chrome.storage.session.remove(RADAR_PENDING_KEY);
-    await chrome.storage.local.remove(RADAR_CONNECTION_KEY);
     await chrome.storage.local.remove([...RUNTIME_STORAGE_KEYS, CLIENT_CATALOG_STORAGE_KEY]);
     await chrome.storage.local.set(settings);
     await Promise.all([loadSettings(), renderTrainedRules(), renderSmartGroups(), renderManagedGroupOrder(), renderWorkspaceSources()]);
@@ -456,13 +450,12 @@ async function saveWorkspaceSourceState(sourceId, enabled) {
     throw new Error(`Save the required credentials for ${source.name} first.`);
   }
   if (enabled && source.permissionOrigins.length) {
-    const granted = await chrome.permissions.request(source.schemaVersion >= 3
-      ? RADAR_SESSION_PERMISSIONS : { origins: source.permissionOrigins });
+    const granted = await chrome.permissions.request({ origins: source.permissionOrigins });
     if (!granted) throw new Error(`${source.name} remains off because service access was not granted.`);
   }
   await chrome.storage.local.set({
-    [WORKSPACE_SOURCES_STORAGE_KEY]: sources.map((candidate) => (
-      candidate.id === sourceId ? { ...candidate, enabled } : candidate
+    [WORKSPACE_SOURCES_STORAGE_KEY]: (stored[WORKSPACE_SOURCES_STORAGE_KEY] || []).map((candidate) => (
+      candidate?.id === sourceId ? { ...source, enabled } : candidate
     )),
   });
   if (!enabled) await releaseUnusedSourceOrigins(source.permissionOrigins);
@@ -476,9 +469,7 @@ function showWorkspaceSourceStatus(message, tone = 'info') {
 function openSourcePermissionDisclosure(source) {
   const disclosure = sourceAccessDisclosure(source, false);
   pendingSourceAccess = source;
-  sourcePermissionCopy.textContent = source.schemaVersion >= 3
-    ? `${disclosure.name} needs optional scripting access to read metadata in an existing signed-in ticket tab at:`
-    : `${disclosure.name} needs permission before it can make read-only requests to:`;
+  sourcePermissionCopy.textContent = `${disclosure.name} needs permission before it can make read-only requests to:`;
   sourcePermissionOrigins.replaceChildren(...disclosure.origins.map((origin) => {
     const item = document.createElement('li');
     item.textContent = origin;
@@ -504,6 +495,15 @@ async function renderWorkspaceSources() {
   const sources = normalizeWorkspaceSources(stored[WORKSPACE_SOURCES_STORAGE_KEY]);
   const secrets = plainObject(stored[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]);
   workspaceSourcesElement.replaceChildren();
+  const unsupportedCount = (Array.isArray(stored[WORKSPACE_SOURCES_STORAGE_KEY]) ? stored[WORKSPACE_SOURCES_STORAGE_KEY] : [])
+    .filter((candidate) => !sources.some((source) => source.id === candidate?.id)).length;
+  if (unsupportedCount) {
+    const note = document.createElement('p');
+    note.className = 'field-help';
+    note.textContent = `${unsupportedCount} custom connection(s) cannot run in this build. Their definitions remain stored. Keep your custom build and backup for those connections.`;
+    workspaceSourcesElement.append(note);
+  }
+
   if (!sources.length) {
     const empty = document.createElement('p');
     empty.className = 'field-help';
@@ -513,8 +513,7 @@ async function renderWorkspaceSources() {
   }
   const sourceAccess = new Map(await Promise.all(sources.map(async (source) => {
     if (!source.permissionOrigins.length || !chrome.permissions?.contains) return [source.id, true];
-    const granted = await chrome.permissions.contains(source.schemaVersion >= 3
-      ? RADAR_SESSION_PERMISSIONS : { origins: source.permissionOrigins }).catch(() => false);
+    const granted = await chrome.permissions.contains({ origins: source.permissionOrigins }).catch(() => false);
     return [source.id, granted];
   })));
   sources.forEach((source) => {
@@ -575,8 +574,8 @@ async function renderWorkspaceSources() {
       const nextSecrets = { ...plainObject(current[WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]) };
       delete nextSecrets[source.id];
       await chrome.storage.local.set({
-        [WORKSPACE_SOURCES_STORAGE_KEY]: normalizeWorkspaceSources(current[WORKSPACE_SOURCES_STORAGE_KEY])
-          .filter((candidate) => candidate.id !== source.id),
+        [WORKSPACE_SOURCES_STORAGE_KEY]: (current[WORKSPACE_SOURCES_STORAGE_KEY] || [])
+          .filter((candidate) => candidate?.id !== source.id),
         [WORKSPACE_SOURCE_SECRETS_STORAGE_KEY]: nextSecrets,
       });
       await releaseUnusedSourceOrigins(source.permissionOrigins);
@@ -1304,4 +1303,10 @@ renderManagedGroupOrder().catch(() => {
 
 renderWorkspaceSources().catch(() => {
   workspaceSourcesElement.textContent = 'Optional connections could not be loaded. Reload this page and try again.';
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.smartGroups && Object.hasOwn(changes, 'workspaceImportUndo')) {
+    renderSmartGroups().catch(() => { smartGroupStatus.textContent = 'Reload Settings to refresh the workspace list.'; });
+  }
 });
