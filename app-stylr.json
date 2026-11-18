@@ -1,0 +1,12 @@
+{
+  "name": "App Stylr",
+  "theme": "dark",
+  "exceptions": "docs/app-stylr-exceptions.md",
+  "version": "1.4.1",
+  "sourceRevision": "6fbc524f07ed7aa7db9c8593bf8116b9440937bc",
+  "release": "https://github.com/kylbutlr/app-stylr/tree/v1.4.1",
+  "sourceTag": "v1.4.1",
+  "accent": "mint",
+  "surfaceTone": "normal",
+  "density": "comfortable"
+}

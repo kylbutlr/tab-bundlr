@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title description">
+  <title id="title">Tab Bundlr icon</title>
+  <desc id="description">A neutral Graphite tile with the existing light grouped tabs.</desc>
+
+  <defs>
+    <linearGradient id="icon-graphite" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#383838" />
+      <stop offset="1" stop-color="#202020" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="160" fill="url(#icon-graphite)" />
+  <g transform="translate(512 512) scale(1.15) translate(-512 -512)">
+<path d="M286 322v380" fill="none" stroke="#F5F5F5" stroke-width="44" stroke-linecap="round" />
+  <circle cx="286" cy="322" r="54" fill="#F5F5F5" />
+  <circle cx="286" cy="512" r="54" fill="#F5F5F5" />
+  <circle cx="286" cy="702" r="54" fill="#F5F5F5" />
+  <rect x="380" y="268" width="390" height="108" rx="54" fill="#F5F5F5" />
+  <rect x="380" y="458" width="330" height="108" rx="54" fill="#F5F5F5" />
+  <rect x="380" y="648" width="390" height="108" rx="54" fill="#F5F5F5" />
+</g>
+</svg>

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-12T16:26:15Z",
+  "timezone": "America/Los_Angeles",
+  "scope": "Local Radar project grouping plus installed extension synthetic/disposable grouping and Undo. No repeated connection test.",
+  "sourceSchema": 4,
+  "localValidation": {
+    "nodeVersion": "22.23.1",
+    "tests": 194,
+    "passed": 194,
+    "failed": 0,
+    "styles": "passed",
+    "syntax": "passed",
+    "package": "passed",
+    "whitespace": "passed",
+    "packageSha256": "9a671fd2ada29834822aac4bea1ba55bafa6845290541e2194caafc2941dd7e9"
+  },
+  "installedAcceptance": {
+    "executedThroughOwnExtension": true,
+    "syntheticMetadata": true,
+    "projectResolverUsed": true,
+    "sharedPlacementAndUndoEnginesUsed": true,
+    "grouped": 2,
+    "undone": 2,
+    "remainingDisposableTabs": 0,
+    "radarServiceRequests": 0,
+    "sourceSaved": false,
+    "sourceEnabled": false,
+    "historyWritten": false,
+    "controllerWorkingTabComparisonPassed": true,
+    "lowerLevelChromeReadback": "Same group before Undo, ungrouped after Undo, owned test pages removed."
+  },
+  "cleanup": {
+    "readOnlyHoldReleased": true,
+    "originalFocusRestored": true,
+    "extensionsControlPageRestored": true,
+    "initialTotalTabCount": 9,
+    "finalTotalTabCount": 9,
+    "workingContentTabsChanged": false,
+    "controlGroupRestored": false,
+    "qualification": "Chrome closed the repurposed extension Settings control tab during reload and removed its one-tab [ Me ] group. The Extensions page was restored in an ungrouped replacement control tab. This occurred outside the disposable controller baseline.",
+    "automaticApprovalRejected": "Recreating the control group mutates persistent Chrome tab-group state outside the disposable-tab authorization. No retry or bypass.",
+    "browserAutomationStopped": true,
+    "crossChatMessagesStoppedAfterUserCorrection": true
+  },
+  "limitations": [
+    "No real-ticket project grouping was performed in this increment.",
+    "No connection test or new service read was repeated.",
+    "Closed-Codex check remains optional and unperformed.",
+    "No activity provenance, historical coverage or deleted-descendant claims.",
+    "Control-tab group restoration requires approval; original color was not captured."
+  ],
+  "externalWrites": {
+    "push": false,
+    "prModified": false,
+    "merge": false,
+    "deployment": false,
+    "ticketWrite": false,
+    "harvestWrite": false
+  },
+  "privacy": "No real tab/provider/account/workspace/ticket/actor IDs, titles, URLs, bodies, emails or credentials are retained in this receipt.",
+  "runtimeSha256": {
+    "radar-session.js": "6ea4be3056f16bf60b9889e9b5c72ea9d077cf8c91b0d9b845804f572e54d630",
+    "radar-disposable.js": "59cc4419b14866e74503b6c8c8abbfe6a4b750d891ede3f0122f54175383e7f4",
+    "radar-disposable.html": "dd29d93ed7f10ac6a81c702e9f24caba1c0c801d44bc67992a6fb5de48210c31",
+    "sources.js": "559c7a626a328aeee6024bd11ee6ed623cfe9082fae66c9ffdc1b0f3181a8f2e",
+    "background.js": "d70603ee2be5be01f9357db7f8a4bebff539741d0ee58aa71f12e531248e7afe",
+    "radar-options.js": "e71be0a019c0504e7bade534f71ac64a88d0464973985aae4bd10b9e54e366cb",
+    "options.js": "922deeb9ffa04fc4a53840397f1b8fe42da6a93a6e9a46d0e7fa93e0bbb8c838",
+    "options.html": "dcbd52739809cfe5d77cd3b59f2c5631a3352a6feefd41be2273baf64768ec09"
+  }
+}

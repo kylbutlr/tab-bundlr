@@ -1,0 +1,24 @@
+{
+  "name": "tab-bundlr",
+  "version": "1.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "npm run styles:check && npm run check && node --test",
+    "package": "node scripts/package-extension.mjs",
+    "test:browser": "node scripts/browser-smoke.cjs",
+    "styles": "node scripts/sync-app-stylr.mjs",
+    "styles:check": "node scripts/sync-app-stylr.mjs --check"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "app-stylr": "file:vendor/packages/app-stylr-1.4.1.tgz"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
+  }
+}

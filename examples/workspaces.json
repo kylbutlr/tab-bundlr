@@ -1,0 +1,16 @@
+{
+  "format": "tab-bundlr-workspaces",
+  "version": 1,
+  "workspaces": [
+    {
+      "id": "documentation",
+      "name": "Documentation",
+      "urls": ["https://docs.example.com/product"]
+    },
+    {
+      "id": "research",
+      "name": "Research",
+      "urls": ["https://research.example.com/library"]
+    }
+  ]
+}

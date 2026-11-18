@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-12T17:09:51.908206+00:00",
+  "scope": "Explicit same-workspace project catalog expansion through the already loaded local Chrome extension.",
+  "actualExtensionRead": {
+    "passed": true,
+    "catalogProjects": 34,
+    "validatedUniqueNativeProjectIds": 34,
+    "validatedProjectWorkspaceMatches": 34,
+    "viewerAndExistingConnectionScopeMatched": true,
+    "finalMetadataGetCount": 2,
+    "nativeSessionPreflight": "Observed frontend enum-returning helper, no credential result exported",
+    "requestPaths": [
+      "GET /api/me",
+      "GET /api/reads?op=bootstrap"
+    ],
+    "rawResponsesRetained": false
+  },
+  "installedConfiguration": {
+    "schemaVersion": 4,
+    "previousBindingCount": 1,
+    "enabledBindingCount": 34,
+    "enabledStateVerifiedAfterSettingsPageReload": true,
+    "automaticBundlingRemainedEnabled": true,
+    "visiblePreferenceControlsMatchedBaseline": 5,
+    "savedWorkspacePrefixCounts": [
+      13,
+      11
+    ],
+    "visibleWorkingGroupSummariesUnchangedSincePreview": true,
+    "newPermissions": false,
+    "extensionReloaded": false,
+    "separateApplyRulesAction": false,
+    "sourcePrecedenceChanged": false,
+    "shortcutRulesChanged": false,
+    "sourceExpansionRollbackAvailable": true
+  },
+  "historicalFailures": {
+    "directReadAuthenticationFailure": true,
+    "failureAfterUserRefreshAndSignIn": true,
+    "initialFailureStageRetained": false,
+    "firstApplyStoppedBeforeWrite": "Raw dictionary key order incorrectly affected route validation; fixed and covered by storage-order regression.",
+    "publicCredentialFreeHtmlInspection": "HTTP 429, stopped without retry."
+  },
+  "localValidation": {
+    "nodeVersion": "22.23.1",
+    "tests": 210,
+    "passed": 210,
+    "failed": 0,
+    "styles": "passed",
+    "syntax": "passed",
+    "package": "passed",
+    "whitespace": "passed",
+    "packageSha256": "6495b68070ec2ba4e6a12385d54f6739371d0facdf3e6c3f8483967143ed4b50"
+  },
+  "acceptanceLimits": [
+    "All 34 projects means the native bootstrap array returned for the verified connection, not historical/cross-workspace completeness.",
+    "No new real-ticket or disposable grouping/Undo test in this increment; prior disposable receipt remains separate.",
+    "Automatic ticket reads retain their prior fail-closed behavior; native renewal acceptance here applies to the explicit catalog action.",
+    "No closed-Codex, service revocation, human-origin, daily-coverage or deleted-descendant acceptance claimed.",
+    "Frontend helper asset/export is observed and pinned, not a stable public API guarantee."
+  ],
+  "cleanup": {
+    "taskSettingsTabClosed": true,
+    "taskOpenedSourceInspectorClosed": true,
+    "postSignInUserSelectionRestored": true,
+    "browserAutomationStopped": true,
+    "previewStarted": false,
+    "validationProcessesExited": true,
+    "otherAgentsContacted": false
+  },
+  "externalWrites": {
+    "push": false,
+    "prModified": false,
+    "merge": false,
+    "publication": false,
+    "deployment": false,
+    "ticketWrite": false,
+    "harvestWrite": false,
+    "newConsent": false,
+    "installation": false
+  },
+  "privacy": "No real account/workspace/project/ticket IDs, names, bodies, browser URLs, emails, credentials or exported settings are retained in this receipt or fixtures.",
+  "fileSha256": {
+    "radar-catalog.js": "6679c6b31cdcf8d352b7d8da5ed4a78fbbf4122159b5efbe839ea010c1e70341",
+    "radar-catalog-options.js": "b887fc75a8861224bd5edf97fcf700297d6837a903680ad788099471096ea480",
+    "radar-native-session.js": "e75b067b964694fe98c8d9180525eb991e2180074e23efc34b8da33132b8111f",
+    "radar-session.js": "526c2c0a6399877c4e28eca502fac7d395d496e901bc265faadd931244659ca4",
+    "options.html": "2bd1cb8b95c193a8ef411a6a6714cdee51cbdcaa3b7b11e5f87d96104092ff06",
+    "scripts/package-extension.mjs": "c536995b0e5526c8b6b45cb3d50bc99b119882b6205a81336a78065c87eb0991",
+    "tests/radar-catalog.test.js": "d6381e991bb17d8a357ab3ac05e97d25cc95a3b802f4fb8bcbed9b019ebae382",
+    "tests/radar-native-session.test.js": "b762c85f6ab30070f47a56117caf543ac904e6c3c687ca5b8db782d2241614a9"
+  }
+}
