@@ -1,5 +1,9 @@
 # Release verification
 
+## Settings-import smoke contract
+
+The browser smoke waits for the expanded settings-import button to be visible, sends Enter through that button's locator, and requires a native file-chooser event for `import-settings`. It does not substitute a mouse click, set files directly, or pass when another import input opens. The Node regression tests exercise focus changes, readiness failures, missing events, wrong inputs and keyboard errors through an offline Playwright adapter. Those checks do not establish native file-chooser acceptance or a passing cloud browser run; run the full smoke only when browser execution is authorized.
+
 ## v1.3.0 release preparation
 
 The candidate is based on [PR #5's merged commit](https://github.com/kylbutlr/tab-bundlr/commit/ef79e2ab96636514cd2bbe5e607af4a769a7bcfb). Its [post-merge cloud CI](https://github.com/kylbutlr/tab-bundlr/actions/runs/43547078100) passed. Local candidate checks and exact artifact integrity are recorded separately in [the v1.3.0 preparation receipt](release-v1.3.0-receipt.json). The version bump does not change runtime code, styling, permissions or source schema.
